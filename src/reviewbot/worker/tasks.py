@@ -61,7 +61,9 @@ async def run_review_pipeline(payload: dict[str, Any]) -> dict[str, Any]:
         ):
             logger.info(
                 "PR %s#%s at %s already reviewed. Skipping.",
-                repo_full_name, pr_number, head_sha,
+                repo_full_name,
+                pr_number,
+                head_sha,
             )
             return {
                 "status": "skipped",
@@ -275,7 +277,10 @@ def handle_pr_command(_self: Any, payload: dict[str, Any]) -> dict[str, Any]:
         result = asyncio.run(run_command_pipeline(payload))
         logger.info(
             "Completed command task '%s' for %s#%s: %s",
-            cmd, repo, pr_num, result.get("status"),
+            cmd,
+            repo,
+            pr_num,
+            result.get("status"),
         )
         return result
     except Exception as exc:

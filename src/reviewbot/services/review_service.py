@@ -56,7 +56,9 @@ class ReviewService:
         start_time = time.perf_counter()
         logger.info(
             "Starting review pipeline for %s#%s (head: %s)",
-            repo_full_name, pr_number, head_sha,
+            repo_full_name,
+            pr_number,
+            head_sha,
         )
 
         # 0. Load repository custom config (.reviewbot.yml) if available
@@ -157,7 +159,8 @@ class ReviewService:
 
         logger.info(
             "Raw findings collected: %d (LLM + static linter) across %d chunks",
-            len(all_findings), len(all_chunks),
+            len(all_findings),
+            len(all_chunks),
         )
 
         # 5. Post-process findings (confidence, diff validity, deduplication, ranking, capping)

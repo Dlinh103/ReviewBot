@@ -102,7 +102,11 @@ class GitHubClient:
                     retry_after = int(response.headers.get("Retry-After", int(delay)))
                     logger.warning(
                         "Rate limit hit on %s %s. Waiting %ds (attempt %d/%d)",
-                        method, path, retry_after, attempt, max_retries,
+                        method,
+                        path,
+                        retry_after,
+                        attempt,
+                        max_retries,
                     )
                     if attempt == max_retries:
                         response.raise_for_status()
@@ -114,7 +118,11 @@ class GitHubClient:
                 if response.status_code >= 500:
                     logger.warning(
                         "GitHub server error %d on %s %s (attempt %d/%d)",
-                        response.status_code, method, path, attempt, max_retries,
+                        response.status_code,
+                        method,
+                        path,
+                        attempt,
+                        max_retries,
                     )
                     if attempt == max_retries:
                         response.raise_for_status()
@@ -134,7 +142,10 @@ class GitHubClient:
                         err_body = exc.response.text
                     logger.error(
                         "Request failed %s %s after %d retries: %s",
-                        method, path, max_retries, exc,
+                        method,
+                        path,
+                        max_retries,
+                        exc,
                     )
                     raise GitHubAPIError(status, str(exc), err_body) from exc
                 await asyncio.sleep(delay)
@@ -175,7 +186,10 @@ class GitHubClient:
 
         logger.info(
             "Retrieved %d changed files across %d page(s) for %s#%s",
-            len(files), page, repo_full_name, pr_number,
+            len(files),
+            page,
+            repo_full_name,
+            pr_number,
         )
         return files
 
@@ -239,7 +253,10 @@ class GitHubClient:
         response = await self._request("POST", path, json_data=payload)
         logger.info(
             "Created review on %s#%s at %s with %d inline comments",
-            repo_full_name, pr_number, commit_id, len(formatted_comments),
+            repo_full_name,
+            pr_number,
+            commit_id,
+            len(formatted_comments),
         )
         return response.json()
 
@@ -272,7 +289,9 @@ class GitHubClient:
             update_res = await self._request("PATCH", update_path, json_data={"body": full_body})
             logger.info(
                 "Updated existing PR summary comment #%s on %s#%s",
-                comment_id, repo_full_name, pr_number,
+                comment_id,
+                repo_full_name,
+                pr_number,
             )
             return update_res.json()
 
@@ -281,6 +300,8 @@ class GitHubClient:
         created_comment = create_res.json()
         logger.info(
             "Created new PR summary comment #%s on %s#%s",
-            created_comment.get("id"), repo_full_name, pr_number,
+            created_comment.get("id"),
+            repo_full_name,
+            pr_number,
         )
         return created_comment

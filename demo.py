@@ -73,97 +73,103 @@ class DemoIntelligentLLM(LLMClient):
         await asyncio.sleep(0.3)  # Simulate API latency
 
         if "tóm tắt" in system_prompt.lower() or "summary" in system_prompt.lower():
-            content = json.dumps({
-                "title_suggestion": (
-                    "feat(auth/payment): add user authentication query and discount calculator"
-                ),
-                "summary": (
-                    "Pull Request bổ sung logic xác thực người dùng trong database "
-                    "và hàm tính toán tỷ lệ giảm giá theo mã coupon."
-                ),
-                "changes": [
-                    "Bổ sung hàm authenticate_user truy vấn trực tiếp bảng users",
-                    "Thêm cấu hình kết nối AWS",
-                    "Cập nhật hàm tính tỷ lệ chiết khấu calculate_discount_ratio",
-                ],
-                "risks": [
-                    "Lỗ hổng bảo mật: Nguy cơ SQL Injection khi nối chuỗi trực tiếp",
-                    "Lỗi Crash ứng dụng: Nguy cơ ZeroDivisionError khi coupon_count = 0",
-                    "Lộ lọt thông tin nhạy cảm: Hardcoded AWS Access Key trong mã nguồn",
-                ],
-                "test_suggestions": [
-                    "Thực hiện kiểm thử bảo mật SQL Injection với username: ' OR '1'='1",
-                    "Bổ sung unit test cho trường hợp coupon_count = 0",
-                    "Chuyển AWS credentials sang biến môi trường (.env)",
-                ],
-            })
+            content = json.dumps(
+                {
+                    "title_suggestion": (
+                        "feat(auth/payment): add user authentication query and discount calculator"
+                    ),
+                    "summary": (
+                        "Pull Request bổ sung logic xác thực người dùng trong database "
+                        "và hàm tính toán tỷ lệ giảm giá theo mã coupon."
+                    ),
+                    "changes": [
+                        "Bổ sung hàm authenticate_user truy vấn trực tiếp bảng users",
+                        "Thêm cấu hình kết nối AWS",
+                        "Cập nhật hàm tính tỷ lệ chiết khấu calculate_discount_ratio",
+                    ],
+                    "risks": [
+                        "Lỗ hổng bảo mật: Nguy cơ SQL Injection khi nối chuỗi trực tiếp",
+                        "Lỗi Crash ứng dụng: Nguy cơ ZeroDivisionError khi coupon_count = 0",
+                        "Lộ lọt thông tin nhạy cảm: Hardcoded AWS Access Key trong mã nguồn",
+                    ],
+                    "test_suggestions": [
+                        "Thực hiện kiểm thử bảo mật SQL Injection với username: ' OR '1'='1",
+                        "Bổ sung unit test cho trường hợp coupon_count = 0",
+                        "Chuyển AWS credentials sang biến môi trường (.env)",
+                    ],
+                }
+            )
         elif "database.py" in user_prompt:
-            content = json.dumps({
-                "findings": [
-                    {
-                        "file": "src/auth/database.py",
-                        "line": 18,
-                        "end_line": 19,
-                        "severity": "critical",
-                        "category": "security",
-                        "message": (
-                            "Phát hiện lỗ hổng SQL Injection nghiêm trọng do nối chuỗi trực tiếp "
-                            "tham số username và password vào câu lệnh SQL."
-                        ),
-                        "evidence": (
-                            'query = f"SELECT * FROM users WHERE username = '
-                            "'{username}' AND password = '{password}'\""
-                        ),
-                        "suggestion": (
-                            'query = "SELECT * FROM users WHERE username = %s AND password = %s"\n'
-                            "    cursor.execute(query, (username, password))"
-                        ),
-                        "confidence": 0.98,
-                    },
-                    {
-                        "file": "src/auth/database.py",
-                        "line": 15,
-                        "end_line": None,
-                        "severity": "critical",
-                        "category": "security",
-                        "message": (
-                            "Không được lưu cứng khóa truy cập AWS trong mã nguồn. "
-                            "Cần chuyển sang sử dụng biến môi trường."
-                        ),
-                        "evidence": 'AWS_ACCESS_KEY_ID = "[REDACTED_AWS_KEY_ID]"',
-                        "suggestion": (
-                            "import os\n"
-                            "    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
-                        ),
-                        "confidence": 0.95,
-                    },
-                ],
-                "overall_notes": "Phát hiện 2 lỗ hổng bảo mật mức độ Critical cần xử lý khẩn cấp.",
-            })
+            content = json.dumps(
+                {
+                    "findings": [
+                        {
+                            "file": "src/auth/database.py",
+                            "line": 18,
+                            "end_line": 19,
+                            "severity": "critical",
+                            "category": "security",
+                            "message": (
+                                "Phát hiện lỗ hổng SQL Injection nghiêm trọng do nối chuỗi trực tiếp "
+                                "tham số username và password vào câu lệnh SQL."
+                            ),
+                            "evidence": (
+                                'query = f"SELECT * FROM users WHERE username = '
+                                "'{username}' AND password = '{password}'\""
+                            ),
+                            "suggestion": (
+                                'query = "SELECT * FROM users WHERE username = %s AND password = %s"\n'
+                                "    cursor.execute(query, (username, password))"
+                            ),
+                            "confidence": 0.98,
+                        },
+                        {
+                            "file": "src/auth/database.py",
+                            "line": 15,
+                            "end_line": None,
+                            "severity": "critical",
+                            "category": "security",
+                            "message": (
+                                "Không được lưu cứng khóa truy cập AWS trong mã nguồn. "
+                                "Cần chuyển sang sử dụng biến môi trường."
+                            ),
+                            "evidence": 'AWS_ACCESS_KEY_ID = "[REDACTED_AWS_KEY_ID]"',
+                            "suggestion": (
+                                "import os\n"
+                                "    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
+                            ),
+                            "confidence": 0.95,
+                        },
+                    ],
+                    "overall_notes": "Phát hiện 2 lỗ hổng bảo mật mức độ Critical cần xử lý khẩn cấp.",
+                }
+            )
         else:
-            content = json.dumps({
-                "findings": [
-                    {
-                        "file": "src/payment/processor.py",
-                        "line": 23,
-                        "end_line": None,
-                        "severity": "major",
-                        "category": "bug",
-                        "message": (
-                            "Nguy cơ lỗi ZeroDivisionError nếu tham số coupon_count bằng 0, "
-                            "có thể gây crash luồng thanh toán."
-                        ),
-                        "evidence": "discount_ratio = total_amount / coupon_count",
-                        "suggestion": (
-                            "if not coupon_count:\n"
-                            "        return 0.0\n"
-                            "    discount_ratio = total_amount / coupon_count"
-                        ),
-                        "confidence": 0.92,
-                    }
-                ],
-                "overall_notes": "Cần bổ sung kiểm tra biên cho phép chia.",
-            })
+            content = json.dumps(
+                {
+                    "findings": [
+                        {
+                            "file": "src/payment/processor.py",
+                            "line": 23,
+                            "end_line": None,
+                            "severity": "major",
+                            "category": "bug",
+                            "message": (
+                                "Nguy cơ lỗi ZeroDivisionError nếu tham số coupon_count bằng 0, "
+                                "có thể gây crash luồng thanh toán."
+                            ),
+                            "evidence": "discount_ratio = total_amount / coupon_count",
+                            "suggestion": (
+                                "if not coupon_count:\n"
+                                "        return 0.0\n"
+                                "    discount_ratio = total_amount / coupon_count"
+                            ),
+                            "confidence": 0.92,
+                        }
+                    ],
+                    "overall_notes": "Cần bổ sung kiểm tra biên cho phép chia.",
+                }
+            )
 
         return LLMResponse(
             content=content,

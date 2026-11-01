@@ -55,12 +55,22 @@ def test_postprocess_confidence_filter() -> None:
     diffs_map = {"main.c": file_diff}
 
     f_high = Finding(
-        file="main.c", line=11, severity="major", category="bug",
-        message="Valid bug", evidence="b = 3;", confidence=0.8,
+        file="main.c",
+        line=11,
+        severity="major",
+        category="bug",
+        message="Valid bug",
+        evidence="b = 3;",
+        confidence=0.8,
     )
     f_low = Finding(
-        file="main.c", line=12, severity="minor", category="style",
-        message="Low confidence", evidence="c = 4;", confidence=0.4,
+        file="main.c",
+        line=12,
+        severity="minor",
+        category="style",
+        message="Low confidence",
+        evidence="c = 4;",
+        confidence=0.4,
     )
 
     processor = PostProcessor(min_confidence=0.6)
@@ -76,18 +86,33 @@ def test_postprocess_line_filter_and_snap() -> None:
 
     # Line 11 is on added line ('+int b = 3;') -> kept at 11
     f_exact = Finding(
-        file="main.c", line=11, severity="major", category="bug",
-        message="Exact line", evidence="b = 3;", confidence=0.8,
+        file="main.c",
+        line=11,
+        severity="major",
+        category="bug",
+        message="Exact line",
+        evidence="b = 3;",
+        confidence=0.8,
     )
     # Line 10 is on context line ('int a = 1;') -> snapped to nearest added line 11
     f_context = Finding(
-        file="main.c", line=10, severity="major", category="performance",
-        message="Context line snap", evidence="a = 1;", confidence=0.8,
+        file="main.c",
+        line=10,
+        severity="major",
+        category="performance",
+        message="Context line snap",
+        evidence="a = 1;",
+        confidence=0.8,
     )
     # Line 999 is completely outside diff -> discarded
     f_outside = Finding(
-        file="main.c", line=999, severity="critical", category="bug",
-        message="Far line", evidence="x = 1;", confidence=0.99,
+        file="main.c",
+        line=999,
+        severity="critical",
+        category="bug",
+        message="Far line",
+        evidence="x = 1;",
+        confidence=0.99,
     )
 
     processor = PostProcessor(min_confidence=0.5)
@@ -104,12 +129,22 @@ def test_postprocess_deduplication() -> None:
 
     # Two findings on the same file, line, and category
     f1 = Finding(
-        file="main.c", line=11, severity="minor", category="bug",
-        message="Duplicate 1", evidence="b = 3;", confidence=0.7,
+        file="main.c",
+        line=11,
+        severity="minor",
+        category="bug",
+        message="Duplicate 1",
+        evidence="b = 3;",
+        confidence=0.7,
     )
     f2 = Finding(
-        file="main.c", line=11, severity="critical", category="bug",
-        message="Duplicate 2 higher severity", evidence="b = 3;", confidence=0.9,
+        file="main.c",
+        line=11,
+        severity="critical",
+        category="bug",
+        message="Duplicate 2 higher severity",
+        evidence="b = 3;",
+        confidence=0.9,
     )
 
     processor = PostProcessor()
@@ -128,20 +163,40 @@ def test_postprocess_ranking_and_capping() -> None:
     # Create 5 findings: severity info, minor, major, critical
     findings = [
         Finding(
-            file="main.c", line=11, severity="info", category="maintainability",
-            message="info", evidence=".", confidence=0.9,
+            file="main.c",
+            line=11,
+            severity="info",
+            category="maintainability",
+            message="info",
+            evidence=".",
+            confidence=0.9,
         ),
         Finding(
-            file="main.c", line=11, severity="minor", category="style",
-            message="minor", evidence=".", confidence=0.8,
+            file="main.c",
+            line=11,
+            severity="minor",
+            category="style",
+            message="minor",
+            evidence=".",
+            confidence=0.8,
         ),
         Finding(
-            file="main.c", line=12, severity="critical", category="security",
-            message="critical", evidence=".", confidence=0.7,
+            file="main.c",
+            line=12,
+            severity="critical",
+            category="security",
+            message="critical",
+            evidence=".",
+            confidence=0.7,
         ),
         Finding(
-            file="main.c", line=12, severity="major", category="bug",
-            message="major", evidence=".", confidence=0.95,
+            file="main.c",
+            line=12,
+            severity="major",
+            category="bug",
+            message="major",
+            evidence=".",
+            confidence=0.95,
         ),
     ]
 

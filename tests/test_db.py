@@ -312,4 +312,3 @@ def test_rule_config_and_feedback(db_session: Session) -> None:
     fb = repo_layer.add_feedback(finding_id, reaction="positive", source="web")
     assert fb.id is not None
     assert fb.reaction.value == "positive"
-

@@ -199,18 +199,20 @@ pr_summaries(id, pr_id FK, head_sha, summary_md, risks_md, test_suggestions_md,
 ```python
 class Finding(BaseModel):
     file: str
-    line: int                      # dòng trong file MỚI (right side)
+    line: int  # dòng trong file MỚI (right side)
     end_line: int | None = None
     severity: Literal["critical", "major", "minor", "info"]
     category: Literal["bug", "security", "performance", "maintainability", "style", "test"]
-    message: str                   # ngắn gọn, nêu vấn đề
-    evidence: str                  # trích dòng code làm bằng chứng
+    message: str  # ngắn gọn, nêu vấn đề
+    evidence: str  # trích dòng code làm bằng chứng
     suggestion: str | None = None  # đoạn code đề xuất (nếu có)
-    confidence: float              # 0.0 - 1.0
+    confidence: float  # 0.0 - 1.0
+
 
 class ReviewResult(BaseModel):
     findings: list[Finding]
     overall_notes: str | None = None
+
 
 class PRSummary(BaseModel):
     title_suggestion: str

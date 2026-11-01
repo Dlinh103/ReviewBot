@@ -47,28 +47,30 @@ def format_inline_comment(finding: Finding) -> str:
     ]
 
     if finding.evidence and finding.evidence.strip():
-        lines.extend([
-            "",
-            "> **Evidence:**",
-            f"> `{finding.evidence.strip()}`",
-        ])
+        lines.extend(
+            [
+                "",
+                "> **Evidence:**",
+                f"> `{finding.evidence.strip()}`",
+            ]
+        )
 
     if finding.suggestion and finding.suggestion.strip():
         # Clean potential markdown fences within suggestion text
         raw_sugg = finding.suggestion.strip()
         if raw_sugg.startswith("```"):
-            clean_sugg = "\n".join(
-                [ln for ln in raw_sugg.splitlines() if not ln.startswith("```")]
-            )
+            clean_sugg = "\n".join([ln for ln in raw_sugg.splitlines() if not ln.startswith("```")])
         else:
             clean_sugg = raw_sugg
 
-        lines.extend([
-            "",
-            "```suggestion",
-            clean_sugg,
-            "```",
-        ])
+        lines.extend(
+            [
+                "",
+                "```suggestion",
+                clean_sugg,
+                "```",
+            ]
+        )
 
     lines.append(f"\n*Confidence: {int(finding.confidence * 100)}%*")
     return "\n".join(lines)
@@ -99,9 +101,7 @@ class PostProcessor:
         target_max_comments = max_comments if max_comments is not None else self.max_comments
 
         # 1. Filter by confidence threshold
-        confident: list[Finding] = [
-            f for f in findings if f.confidence >= target_min_confidence
-        ]
+        confident: list[Finding] = [f for f in findings if f.confidence >= target_min_confidence]
         logger.info(
             "Confidence filter (>= %.2f): %d/%d findings passed",
             target_min_confidence,
@@ -125,14 +125,17 @@ class PostProcessor:
                 if nearest is not None:
                     logger.debug(
                         "Snapped finding from line %d to nearest added line %d in %s",
-                        f.line, nearest, f.file,
+                        f.line,
+                        nearest,
+                        f.file,
                     )
                     f.line = nearest
                     valid_in_diff.append(f)
                 else:
                     logger.warning(
                         "Finding discarded: line %d not on added line in %s",
-                        f.line, f.file,
+                        f.line,
+                        f.file,
                     )
 
         # 3. Deduplication by (file, line, category)

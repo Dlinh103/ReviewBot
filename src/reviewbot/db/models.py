@@ -94,9 +94,7 @@ class PullRequest(Base):
     """GitHub Pull Request tracked by ReviewBot."""
 
     __tablename__ = "pull_requests"
-    __table_args__ = (
-        UniqueConstraint("repo_id", "number", name="uq_repo_pr_number"),
-    )
+    __table_args__ = (UniqueConstraint("repo_id", "number", name="uq_repo_pr_number"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     repo_id: Mapped[int] = mapped_column(
@@ -127,9 +125,7 @@ class Review(Base):
     """Review execution instance for a specific PR commit head."""
 
     __tablename__ = "reviews"
-    __table_args__ = (
-        UniqueConstraint("pr_id", "head_sha", name="uq_pr_head_sha"),
-    )
+    __table_args__ = (UniqueConstraint("pr_id", "head_sha", name="uq_pr_head_sha"),)
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     pr_id: Mapped[int] = mapped_column(
@@ -258,9 +254,7 @@ class SystemRuleConfig(Base):
     __tablename__ = "rule_configs"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    config_key: Mapped[str] = mapped_column(
-        String(100), unique=True, index=True, default="default"
-    )
+    config_key: Mapped[str] = mapped_column(String(100), unique=True, index=True, default="default")
     language: Mapped[str] = mapped_column(String(20), default="vi")
     min_confidence: Mapped[float] = mapped_column(Float, default=0.8)
     post_summary: Mapped[bool] = mapped_column(Boolean, default=True)
@@ -289,5 +283,3 @@ class User(Base):
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), default=utcnow, onupdate=utcnow
     )
-
-

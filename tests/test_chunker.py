@@ -26,9 +26,9 @@ def test_format_numbered_hunk() -> None:
     lines = numbered.splitlines()
     assert lines[0] == "@@ -1,4 +1,5 @@"
     assert lines[1] == " L1:  def hello():"
-    assert lines[2] == "-    : -    print(\"Hi\")"
-    assert lines[3] == "+L2: +    print(\"Hello\")"
-    assert lines[4] == "+L3: +    print(\"World\")"
+    assert lines[2] == '-    : -    print("Hi")'
+    assert lines[3] == '+L2: +    print("Hello")'
+    assert lines[4] == '+L3: +    print("World")'
     assert lines[5] == " L4:      return True"
 
 
@@ -42,7 +42,7 @@ def test_chunk_file_diff_single_chunk() -> None:
     assert chunk.file_path == "hello.py"
     assert chunk.start_line == 1
     assert chunk.end_line == 5
-    assert "+L2: +    print(\"Hello\")" in chunk.numbered_diff
+    assert '+L2: +    print("Hello")' in chunk.numbered_diff
     assert chunk.estimated_tokens > 0
 
 

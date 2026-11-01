@@ -21,54 +21,66 @@ def format_pr_summary_markdown(summary: PRSummary, language: str = "vi") -> str:
     ]
 
     if language.lower() == "vi":
-        lines.extend([
-            f"**💡 Gợi ý tiêu đề PR:** `{summary.title_suggestion}`",
-            "",
-            "### 📌 Tóm tắt (Summary)",
-            summary.summary,
-            "",
-            "### 🛠️ Thay đổi chính (Key Changes)",
-        ])
+        lines.extend(
+            [
+                f"**💡 Gợi ý tiêu đề PR:** `{summary.title_suggestion}`",
+                "",
+                "### 📌 Tóm tắt (Summary)",
+                summary.summary,
+                "",
+                "### 🛠️ Thay đổi chính (Key Changes)",
+            ]
+        )
         for change in summary.changes:
             lines.append(f"- {change}")
 
-        lines.extend([
-            "",
-            "### ⚠️ Rủi ro tiềm ẩn (Risks & Considerations)",
-        ])
+        lines.extend(
+            [
+                "",
+                "### ⚠️ Rủi ro tiềm ẩn (Risks & Considerations)",
+            ]
+        )
         for risk in summary.risks:
             lines.append(f"- {risk}")
 
-        lines.extend([
-            "",
-            "### 🧪 Gợi ý kiểm thử (Test Suggestions)",
-        ])
+        lines.extend(
+            [
+                "",
+                "### 🧪 Gợi ý kiểm thử (Test Suggestions)",
+            ]
+        )
         for test in summary.test_suggestions:
             lines.append(f"- {test}")
 
     else:
-        lines.extend([
-            f"**💡 Suggested Title:** `{summary.title_suggestion}`",
-            "",
-            "### 📌 Summary",
-            summary.summary,
-            "",
-            "### 🛠️ Key Changes",
-        ])
+        lines.extend(
+            [
+                f"**💡 Suggested Title:** `{summary.title_suggestion}`",
+                "",
+                "### 📌 Summary",
+                summary.summary,
+                "",
+                "### 🛠️ Key Changes",
+            ]
+        )
         for change in summary.changes:
             lines.append(f"- {change}")
 
-        lines.extend([
-            "",
-            "### ⚠️ Risks & Considerations",
-        ])
+        lines.extend(
+            [
+                "",
+                "### ⚠️ Risks & Considerations",
+            ]
+        )
         for risk in summary.risks:
             lines.append(f"- {risk}")
 
-        lines.extend([
-            "",
-            "### 🧪 Test Suggestions",
-        ])
+        lines.extend(
+            [
+                "",
+                "### 🧪 Test Suggestions",
+            ]
+        )
         for test in summary.test_suggestions:
             lines.append(f"- {test}")
 

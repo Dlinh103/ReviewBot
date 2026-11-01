@@ -31,9 +31,7 @@ DATASET_CASES: list[dict[str, Any]] = [
             "+    query = f\"SELECT * FROM users WHERE username = '{username}'\"\n"
             "+    return cursor.execute(query)\n"
         ),
-        "expected": [
-            {"category": "security", "severity": "critical", "line": 2}
-        ],
+        "expected": [{"category": "security", "severity": "critical", "line": 2}],
     },
     {
         "id": "SEC-02",
@@ -46,9 +44,7 @@ DATASET_CASES: list[dict[str, Any]] = [
             "+    # Dynamic calculation\n"
             "+    return eval(expr)\n"
         ),
-        "expected": [
-            {"category": "security", "severity": "critical", "line": 3}
-        ],
+        "expected": [{"category": "security", "severity": "critical", "line": 3}],
     },
     {
         "id": "BUG-03",
@@ -61,22 +57,16 @@ DATASET_CASES: list[dict[str, Any]] = [
             "+    ratio = total / 0\n"
             "+    return ratio\n"
         ),
-        "expected": [
-            {"category": "bug", "severity": "critical", "line": 2}
-        ],
+        "expected": [{"category": "bug", "severity": "critical", "line": 2}],
     },
     {
         "id": "SEC-04",
         "title": "Hardcoded API Secret Token",
         "filename": "config.py",
         "patch": (
-            "@@ -1,3 +1,4 @@\n"
-            " import os\n"
-            "+api_key = \"ghp_1234567890abcdefghijklmnopqrstuv\"\n"
+            '@@ -1,3 +1,4 @@\n import os\n+api_key = "ghp_1234567890abcdefghijklmnopqrstuv"\n'
         ),
-        "expected": [
-            {"category": "security", "severity": "critical", "line": 2}
-        ],
+        "expected": [{"category": "security", "severity": "critical", "line": 2}],
     },
     {
         "id": "BUG-05",
@@ -91,9 +81,7 @@ DATASET_CASES: list[dict[str, Any]] = [
             "+    except:\n"
             "+        pass\n"
         ),
-        "expected": [
-            {"category": "bug", "severity": "minor", "line": 4}
-        ],
+        "expected": [{"category": "bug", "severity": "minor", "line": 4}],
     },
     {
         "id": "CTRL-06",
@@ -103,7 +91,7 @@ DATASET_CASES: list[dict[str, Any]] = [
             "@@ -1,4 +1,5 @@\n"
             " def safe_add(a: int, b: int) -> int:\n"
             "-    return 0\n"
-            "+    \"\"\"Return the sum of two integers safely.\"\"\"\n"
+            '+    """Return the sum of two integers safely."""\n'
             "+    return a + b\n"
         ),
         "expected": [],
@@ -143,11 +131,9 @@ DATASET_CASES: list[dict[str, Any]] = [
             " import os\n"
             " def run_archive(folder_path):\n"
             "-    pass\n"
-            "+    os.system(\"tar -czf backup.tar.gz \" + folder_path)\n"
+            '+    os.system("tar -czf backup.tar.gz " + folder_path)\n'
         ),
-        "expected": [
-            {"category": "security", "severity": "major", "line": 3}
-        ],
+        "expected": [{"category": "security", "severity": "major", "line": 3}],
     },
     {
         "id": "CTRL-10",
@@ -269,12 +255,8 @@ class BenchmarkEngine:
             )
             case_results.append(asdict(case_res))
 
-        precision = (
-            round(tp_total / (tp_total + fp_total), 4) if (tp_total + fp_total) > 0 else 1.0
-        )
-        recall = (
-            round(tp_total / (tp_total + fn_total), 4) if (tp_total + fn_total) > 0 else 1.0
-        )
+        precision = round(tp_total / (tp_total + fp_total), 4) if (tp_total + fp_total) > 0 else 1.0
+        recall = round(tp_total / (tp_total + fn_total), 4) if (tp_total + fn_total) > 0 else 1.0
         f1 = (
             round(2 * (precision * recall) / (precision + recall), 4)
             if (precision + recall) > 0

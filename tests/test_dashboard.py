@@ -178,4 +178,3 @@ async def test_dashboard_benchmark_api() -> None:
         assert run_data["status"] == "success"
         assert "markdown_table" in run_data
         assert run_data["report"]["precision"] >= 0.85
-

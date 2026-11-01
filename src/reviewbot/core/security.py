@@ -93,11 +93,13 @@ def create_access_token(
     else:
         expire = now + timedelta(minutes=DEFAULT_ACCESS_TOKEN_EXPIRE_MINUTES)
 
-    to_encode.update({
-        "exp": expire,
-        "iat": now,
-        "iss": "reviewbot-api",
-    })
+    to_encode.update(
+        {
+            "exp": expire,
+            "iat": now,
+            "iss": "reviewbot-api",
+        }
+    )
 
     secret_key = get_jwt_secret_key()
     return jwt.encode(to_encode, secret_key, algorithm=JWT_ALGORITHM)

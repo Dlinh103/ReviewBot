@@ -82,109 +82,117 @@ class FallbackDemoLLM(LLMClient):
         _max_tokens: int | None = None,
     ) -> LLMResponse:
         if "tóm tắt" in system_prompt.lower() or "summary" in system_prompt.lower():
-            content = json.dumps({
-                "title_suggestion": "feat(auth): secure user authentication query",
-                "summary": (
-                    "Pull Request bổ sung xử lý truy vấn xác thực người dùng "
-                    "trong cơ sở dữ liệu."
-                ),
-                "changes": [
-                    "Bổ sung hàm authenticate_user truy vấn trực tiếp bảng users",
-                    "Thêm cấu hình kết nối AWS",
-                ],
-                "risks": [
-                    "Lỗ hổng bảo mật nghiêm trọng: Nguy cơ SQL Injection khi nối chuỗi",
-                    "Lộ lọt thông tin nhạy cảm: Hardcoded AWS Access Key trong mã nguồn",
-                ],
-                "test_suggestions": [
-                    "Thực hiện kiểm thử SQL Injection với username: ' OR '1'='1",
-                    "Chuyển AWS credentials sang biến môi trường (.env)",
-                ],
-            })
+            content = json.dumps(
+                {
+                    "title_suggestion": "feat(auth): secure user authentication query",
+                    "summary": (
+                        "Pull Request bổ sung xử lý truy vấn xác thực người dùng "
+                        "trong cơ sở dữ liệu."
+                    ),
+                    "changes": [
+                        "Bổ sung hàm authenticate_user truy vấn trực tiếp bảng users",
+                        "Thêm cấu hình kết nối AWS",
+                    ],
+                    "risks": [
+                        "Lỗ hổng bảo mật nghiêm trọng: Nguy cơ SQL Injection khi nối chuỗi",
+                        "Lộ lọt thông tin nhạy cảm: Hardcoded AWS Access Key trong mã nguồn",
+                    ],
+                    "test_suggestions": [
+                        "Thực hiện kiểm thử SQL Injection với username: ' OR '1'='1",
+                        "Chuyển AWS credentials sang biến môi trường (.env)",
+                    ],
+                }
+            )
         elif "database.py" in user_prompt or "sql" in user_prompt.lower():
-            content = json.dumps({
-                "findings": [
-                    {
-                        "file": "src/auth/database.py",
-                        "line": 18,
-                        "end_line": 19,
-                        "severity": "critical",
-                        "category": "security",
-                        "message": (
-                            "Phát hiện lỗ hổng SQL Injection nghiêm trọng do nối chuỗi trực tiếp "
-                            "tham số username và password vào câu lệnh SQL."
-                        ),
-                        "evidence": (
-                            'query = f"SELECT * FROM users WHERE username = '
-                            "'{username}' AND password = '{password}'\""
-                        ),
-                        "suggestion": (
-                            'query = "SELECT * FROM users WHERE username = %s AND password = %s"\n'
-                            "    cursor.execute(query, (username, password))"
-                        ),
-                        "confidence": 0.98,
-                    },
-                    {
-                        "file": "src/auth/database.py",
-                        "line": 15,
-                        "end_line": None,
-                        "severity": "critical",
-                        "category": "security",
-                        "message": (
-                            "Không được lưu cứng khóa truy cập AWS trong mã nguồn. "
-                            "Cần chuyển sang sử dụng biến môi trường."
-                        ),
-                        "evidence": 'AWS_ACCESS_KEY_ID = "[REDACTED_AWS_KEY_ID]"',
-                        "suggestion": (
-                            "import os\n"
-                            "    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
-                        ),
-                        "confidence": 0.95,
-                    },
-                ],
-                "overall_notes": "Phát hiện 2 lỗ hổng bảo mật mức độ Critical cần xử lý khẩn cấp.",
-            })
+            content = json.dumps(
+                {
+                    "findings": [
+                        {
+                            "file": "src/auth/database.py",
+                            "line": 18,
+                            "end_line": 19,
+                            "severity": "critical",
+                            "category": "security",
+                            "message": (
+                                "Phát hiện lỗ hổng SQL Injection nghiêm trọng do nối chuỗi trực tiếp "
+                                "tham số username và password vào câu lệnh SQL."
+                            ),
+                            "evidence": (
+                                'query = f"SELECT * FROM users WHERE username = '
+                                "'{username}' AND password = '{password}'\""
+                            ),
+                            "suggestion": (
+                                'query = "SELECT * FROM users WHERE username = %s AND password = %s"\n'
+                                "    cursor.execute(query, (username, password))"
+                            ),
+                            "confidence": 0.98,
+                        },
+                        {
+                            "file": "src/auth/database.py",
+                            "line": 15,
+                            "end_line": None,
+                            "severity": "critical",
+                            "category": "security",
+                            "message": (
+                                "Không được lưu cứng khóa truy cập AWS trong mã nguồn. "
+                                "Cần chuyển sang sử dụng biến môi trường."
+                            ),
+                            "evidence": 'AWS_ACCESS_KEY_ID = "[REDACTED_AWS_KEY_ID]"',
+                            "suggestion": (
+                                "import os\n"
+                                "    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
+                            ),
+                            "confidence": 0.95,
+                        },
+                    ],
+                    "overall_notes": "Phát hiện 2 lỗ hổng bảo mật mức độ Critical cần xử lý khẩn cấp.",
+                }
+            )
         elif "zero" in user_prompt.lower() or "coupon" in user_prompt.lower():
-            content = json.dumps({
-                "findings": [
-                    {
-                        "file": "src/payment/processor.py",
-                        "line": 23,
-                        "end_line": None,
-                        "severity": "major",
-                        "category": "bug",
-                        "message": (
-                            "Nguy cơ lỗi ZeroDivisionError nếu tham số coupon_count bằng 0, "
-                            "có thể gây crash ứng dụng thanh toán."
-                        ),
-                        "evidence": "discount_ratio = total_amount / coupon_count",
-                        "suggestion": (
-                            "if not coupon_count:\n"
-                            "        return 0.0\n"
-                            "    discount_ratio = total_amount / coupon_count"
-                        ),
-                        "confidence": 0.92,
-                    }
-                ],
-                "overall_notes": "Cần bổ sung kiểm tra biên cho phép chia.",
-            })
+            content = json.dumps(
+                {
+                    "findings": [
+                        {
+                            "file": "src/payment/processor.py",
+                            "line": 23,
+                            "end_line": None,
+                            "severity": "major",
+                            "category": "bug",
+                            "message": (
+                                "Nguy cơ lỗi ZeroDivisionError nếu tham số coupon_count bằng 0, "
+                                "có thể gây crash ứng dụng thanh toán."
+                            ),
+                            "evidence": "discount_ratio = total_amount / coupon_count",
+                            "suggestion": (
+                                "if not coupon_count:\n"
+                                "        return 0.0\n"
+                                "    discount_ratio = total_amount / coupon_count"
+                            ),
+                            "confidence": 0.92,
+                        }
+                    ],
+                    "overall_notes": "Cần bổ sung kiểm tra biên cho phép chia.",
+                }
+            )
         else:
-            content = json.dumps({
-                "findings": [
-                    {
-                        "file": "src/module.py",
-                        "line": 1,
-                        "end_line": None,
-                        "severity": "minor",
-                        "category": "maintainability",
-                        "message": "Nên bổ sung docstring và type hints đầy đủ cho các hàm.",
-                        "evidence": "def process():",
-                        "suggestion": 'def process() -> None:\n    """Hàm xử lý nghiệp vụ."""',
-                        "confidence": 0.85,
-                    }
-                ],
-                "overall_notes": "Mã nguồn cơ bản tốt, cần hoàn thiện docstrings.",
-            })
+            content = json.dumps(
+                {
+                    "findings": [
+                        {
+                            "file": "src/module.py",
+                            "line": 1,
+                            "end_line": None,
+                            "severity": "minor",
+                            "category": "maintainability",
+                            "message": "Nên bổ sung docstring và type hints đầy đủ cho các hàm.",
+                            "evidence": "def process():",
+                            "suggestion": 'def process() -> None:\n    """Hàm xử lý nghiệp vụ."""',
+                            "confidence": 0.85,
+                        }
+                    ],
+                    "overall_notes": "Mã nguồn cơ bản tốt, cần hoàn thiện docstrings.",
+                }
+            )
 
         return LLMResponse(
             content=content,
@@ -279,8 +287,7 @@ def export_audit_report(format: str = "json") -> Any:
             "## 1. Executive Summary",
             f"- **Total PRs Analyzed:** {report['summary']['total_prs_analyzed']}",
             f"- **Total Findings:** {report['summary']['total_findings']}",
-            f"- **Critical Vulnerabilities:** "
-            f"{report['summary']['critical_security_count']}",
+            f"- **Critical Vulnerabilities:** {report['summary']['critical_security_count']}",
             f"- **Total LLM Cost:** ${report['summary']['total_cost_usd']:.2f}",
             f"- **Avg Review Latency:** {report['summary']['avg_latency_ms']} ms",
             f"- **Monitored Repositories:** {report['summary']['active_repositories_count']}",
@@ -297,12 +304,14 @@ def export_audit_report(format: str = "json") -> Any:
             )
             md_lines.append(row)
 
-        md_lines.extend([
-            "",
-            "## 3. High Severity Defect Findings",
-            "| ID | File | Line | Severity | Category | Description |",
-            "|---|---|---|---|---|---|",
-        ])
+        md_lines.extend(
+            [
+                "",
+                "## 3. High Severity Defect Findings",
+                "| ID | File | Line | Severity | Category | Description |",
+                "|---|---|---|---|---|---|",
+            ]
+        )
         for f in report["critical_findings"]:
             finding_row = (
                 f"| #{f['id']} | `{f['file']}` | L{f['line']} | "
@@ -310,18 +319,21 @@ def export_audit_report(format: str = "json") -> Any:
             )
             md_lines.append(finding_row)
 
-        md_lines.extend([
-            "",
-            "## 4. Compliance & Policy Enforcement",
-            f"- **Secrets Leak Scanner:** {report['compliance_status']['secrets_detection']}",
-            f"- **SQL Injection Defense:** {report['compliance_status']['sql_injection_defense']}",
-            f"- **OWASP Standards:** {report['compliance_status']['owasp_top_10_coverage']}",
-            "",
-            "---",
-            "*Generated by ReviewBot VKU SE Platform.*",
-        ])
+        md_lines.extend(
+            [
+                "",
+                "## 4. Compliance & Policy Enforcement",
+                f"- **Secrets Leak Scanner:** {report['compliance_status']['secrets_detection']}",
+                f"- **SQL Injection Defense:** {report['compliance_status']['sql_injection_defense']}",
+                f"- **OWASP Standards:** {report['compliance_status']['owasp_top_10_coverage']}",
+                "",
+                "---",
+                "*Generated by ReviewBot VKU SE Platform.*",
+            ]
+        )
         md_content = "\n".join(md_lines)
         from fastapi import Response
+
         return Response(
             content=md_content,
             media_type="text/markdown",
@@ -407,6 +419,7 @@ def retry_webhook_delivery(delivery_id: str) -> dict[str, Any]:
                 detail=f"Webhook delivery '{delivery_id}' not found",
             )
         import uuid
+
         retry_id = f"retry_{uuid.uuid4().hex[:12]}"
         new_deliv = repo.log_webhook_delivery(
             delivery_id=retry_id,
@@ -560,12 +573,14 @@ async def simulate_review(
             per_page: int = 100,
         ) -> list[dict[str, Any]]:
             _ = (repo_full_name, pr_number, per_page)
-            return [{
-                "filename": req.filename,
-                "status": "modified",
-                "changes": len(req.patch.splitlines()),
-                "patch": clean_patch,
-            }]
+            return [
+                {
+                    "filename": req.filename,
+                    "status": "modified",
+                    "changes": len(req.patch.splitlines()),
+                    "patch": clean_patch,
+                }
+            ]
 
         async def create_review(
             self,
@@ -593,6 +608,7 @@ async def simulate_review(
     review_service = ReviewService(llm_client=llm, settings=settings)
 
     import uuid
+
     sim_sha = f"sim-{uuid.uuid4().hex[:10]}"
     result = await review_service.review_pull_request(
         github_client=mock_client,
@@ -651,7 +667,9 @@ async def simulate_review(
         "summary_markdown": format_pr_summary_markdown(
             PRSummary.model_validate(summary_data),
             language="vi",
-        ) if summary_data else "",
+        )
+        if summary_data
+        else "",
         "telemetry": {
             "tokens": result.get("input_tokens", 450) + result.get("output_tokens", 190),
             "cost_usd": result.get("total_cost_usd", 0.0042),
@@ -673,9 +691,11 @@ async def get_benchmark_report() -> dict[str, Any]:
 
     # If no cached report, run engine
     from eval.run_eval import BenchmarkEngine
+
     engine = BenchmarkEngine()
     rep = engine.run()
     from dataclasses import asdict
+
     return asdict(rep)
 
 
@@ -685,6 +705,7 @@ async def run_benchmark_suite() -> dict[str, Any]:
     from dataclasses import asdict
 
     from eval.run_eval import BenchmarkEngine
+
     engine = BenchmarkEngine()
     report = engine.run()
     return {

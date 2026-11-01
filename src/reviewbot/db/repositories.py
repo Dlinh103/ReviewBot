@@ -206,7 +206,10 @@ class ReviewRepository:
         self.session.flush()
         logger.info(
             "Finalized review #%s: %d findings, %d tokens, cost=$%.4f",
-            review_id, len(findings), input_tokens + output_tokens, cost_usd,
+            review_id,
+            len(findings),
+            input_tokens + output_tokens,
+            cost_usd,
         )
         return review
 
@@ -250,11 +253,7 @@ class ReviewRepository:
 
     def get_review_with_findings(self, review_id: int) -> Review | None:
         """Fetch review with findings eagerly loaded."""
-        stmt = (
-            select(Review)
-            .options(joinedload(Review.findings))
-            .where(Review.id == review_id)
-        )
+        stmt = select(Review).options(joinedload(Review.findings)).where(Review.id == review_id)
         return self.session.scalar(stmt)
 
     def get_dashboard_stats(self) -> dict[str, Any]:
@@ -262,15 +261,18 @@ class ReviewRepository:
         total_prs = self.session.scalar(select(func.count(PullRequest.id))) or 0
         total_reviews = self.session.scalar(select(func.count(Review.id))) or 0
         total_findings = self.session.scalar(select(func.count(FindingModel.id))) or 0
-        total_tokens = self.session.scalar(
-            select(func.coalesce(func.sum(Review.input_tokens + Review.output_tokens), 0))
-        ) or 0
-        total_cost = self.session.scalar(
-            select(func.coalesce(func.sum(Review.cost_usd), 0.0))
-        ) or 0.0
-        avg_duration = self.session.scalar(
-            select(func.coalesce(func.avg(Review.duration_ms), 0))
-        ) or 0
+        total_tokens = (
+            self.session.scalar(
+                select(func.coalesce(func.sum(Review.input_tokens + Review.output_tokens), 0))
+            )
+            or 0
+        )
+        total_cost = (
+            self.session.scalar(select(func.coalesce(func.sum(Review.cost_usd), 0.0))) or 0.0
+        )
+        avg_duration = (
+            self.session.scalar(select(func.coalesce(func.avg(Review.duration_ms), 0))) or 0
+        )
 
         # Severity breakdown
         severities = {s.value: 0 for s in Severity}
@@ -316,20 +318,22 @@ class ReviewRepository:
         )
         results = []
         for review, pr, repo, count in self.session.execute(stmt):
-            results.append({
-                "id": review.id,
-                "repo_name": repo.full_name,
-                "pr_number": pr.number,
-                "pr_title": pr.title,
-                "author": pr.author,
-                "head_sha": review.head_sha[:8],
-                "status": review.status.value,
-                "model": review.model,
-                "findings_count": count,
-                "cost_usd": round(review.cost_usd, 4),
-                "duration_ms": review.duration_ms,
-                "created_at": review.created_at.isoformat() if review.created_at else None,
-            })
+            results.append(
+                {
+                    "id": review.id,
+                    "repo_name": repo.full_name,
+                    "pr_number": pr.number,
+                    "pr_title": pr.title,
+                    "author": pr.author,
+                    "head_sha": review.head_sha[:8],
+                    "status": review.status.value,
+                    "model": review.model,
+                    "findings_count": count,
+                    "cost_usd": round(review.cost_usd, 4),
+                    "duration_ms": review.duration_ms,
+                    "created_at": review.created_at.isoformat() if review.created_at else None,
+                }
+            )
         return results
 
     def get_review_detail(self, review_id: int) -> dict[str, Any] | None:
@@ -385,7 +389,9 @@ class ReviewRepository:
                 "summary_md": summary.summary_md if summary else "",
                 "risks_md": summary.risks_md if summary else "",
                 "test_suggestions_md": summary.test_suggestions_md if summary else "",
-            } if summary else None,
+            }
+            if summary
+            else None,
         }
 
     def get_all_repositories(self) -> list[dict[str, Any]]:
@@ -393,27 +399,35 @@ class ReviewRepository:
         repos = list(self.session.scalars(select(Repository).order_by(Repository.id.desc())))
         result: list[dict[str, Any]] = []
         for r in repos:
-            pr_count = self.session.scalar(
-                select(func.count(PullRequest.id)).where(PullRequest.repo_id == r.id)
-            ) or 0
-            findings_count = self.session.scalar(
-                select(func.count(FindingModel.id))
-                .join(Review, FindingModel.review_id == Review.id)
-                .join(PullRequest, Review.pr_id == PullRequest.id)
-                .where(PullRequest.repo_id == r.id)
-            ) or 0
+            pr_count = (
+                self.session.scalar(
+                    select(func.count(PullRequest.id)).where(PullRequest.repo_id == r.id)
+                )
+                or 0
+            )
+            findings_count = (
+                self.session.scalar(
+                    select(func.count(FindingModel.id))
+                    .join(Review, FindingModel.review_id == Review.id)
+                    .join(PullRequest, Review.pr_id == PullRequest.id)
+                    .where(PullRequest.repo_id == r.id)
+                )
+                or 0
+            )
             cfg = r.config_json or {}
-            result.append({
-                "id": r.id,
-                "github_repo_id": r.github_repo_id,
-                "full_name": r.full_name,
-                "installation_id": r.installation_id,
-                "created_at": r.created_at.isoformat() if r.created_at else None,
-                "prs_count": pr_count,
-                "findings_count": findings_count,
-                "is_active": cfg.get("is_active", True),
-                "config": cfg,
-            })
+            result.append(
+                {
+                    "id": r.id,
+                    "github_repo_id": r.github_repo_id,
+                    "full_name": r.full_name,
+                    "installation_id": r.installation_id,
+                    "created_at": r.created_at.isoformat() if r.created_at else None,
+                    "prs_count": pr_count,
+                    "findings_count": findings_count,
+                    "is_active": cfg.get("is_active", True),
+                    "config": cfg,
+                }
+            )
         return result
 
     def toggle_repository_active(self, repo_id: int) -> dict[str, Any] | None:
@@ -478,39 +492,42 @@ class ReviewRepository:
         result: list[dict[str, Any]] = []
         for pr, repo in self.session.execute(stmt):
             latest_review = self.session.scalar(
-                select(Review)
-                .where(Review.pr_id == pr.id)
-                .order_by(Review.id.desc())
-                .limit(1)
+                select(Review).where(Review.pr_id == pr.id).order_by(Review.id.desc()).limit(1)
             )
             findings_count = 0
             cost = 0.0
             rev_status = "none"
             rev_id = None
             if latest_review:
-                findings_count = self.session.scalar(
-                    select(func.count(FindingModel.id))
-                    .where(FindingModel.review_id == latest_review.id)
-                ) or 0
+                findings_count = (
+                    self.session.scalar(
+                        select(func.count(FindingModel.id)).where(
+                            FindingModel.review_id == latest_review.id
+                        )
+                    )
+                    or 0
+                )
                 cost = latest_review.cost_usd
                 rev_status = latest_review.status.value
                 rev_id = latest_review.id
 
-            result.append({
-                "id": pr.id,
-                "number": pr.number,
-                "title": pr.title,
-                "author": pr.author,
-                "head_sha": pr.head_sha[:8],
-                "state": pr.state,
-                "repo_name": repo.full_name,
-                "repo_id": repo.id,
-                "created_at": pr.created_at.isoformat() if pr.created_at else None,
-                "findings_count": findings_count,
-                "latest_review_id": rev_id,
-                "latest_review_status": rev_status,
-                "cost_usd": round(cost, 4),
-            })
+            result.append(
+                {
+                    "id": pr.id,
+                    "number": pr.number,
+                    "title": pr.title,
+                    "author": pr.author,
+                    "head_sha": pr.head_sha[:8],
+                    "state": pr.state,
+                    "repo_name": repo.full_name,
+                    "repo_id": repo.id,
+                    "created_at": pr.created_at.isoformat() if pr.created_at else None,
+                    "findings_count": findings_count,
+                    "latest_review_id": rev_id,
+                    "latest_review_status": rev_status,
+                    "cost_usd": round(cost, 4),
+                }
+            )
         return result
 
     def get_pr_detail(self, pr_id: int) -> dict[str, Any] | None:
@@ -555,7 +572,9 @@ class ReviewRepository:
                 "summary_md": summary.summary_md if summary else "",
                 "risks_md": summary.risks_md if summary else "",
                 "test_suggestions_md": summary.test_suggestions_md if summary else "",
-            } if summary else None,
+            }
+            if summary
+            else None,
             "reviews": [
                 {
                     "id": rev.id,
@@ -627,11 +646,7 @@ class ReviewRepository:
 
     def get_recent_webhook_deliveries(self, limit: int = 50) -> list[dict[str, Any]]:
         """Return recent webhook delivery audit records."""
-        stmt = (
-            select(WebhookDelivery)
-            .order_by(WebhookDelivery.id.desc())
-            .limit(limit)
-        )
+        stmt = select(WebhookDelivery).order_by(WebhookDelivery.id.desc()).limit(limit)
         records = list(self.session.scalars(stmt))
         return [
             {
@@ -807,8 +822,7 @@ class ReviewRepository:
                 ),
                 evidence='AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"',
                 suggestion=(
-                    "import os\n"
-                    "    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
+                    "import os\n    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')"
                 ),
                 confidence=0.95,
             ),
@@ -828,8 +842,7 @@ class ReviewRepository:
             summary=PRSummary(
                 title_suggestion="feat(auth): secure user authentication query",
                 summary=(
-                    "Pull Request bổ sung logic xác thực người dùng trong database "
-                    "và kết nối AWS."
+                    "Pull Request bổ sung logic xác thực người dùng trong database và kết nối AWS."
                 ),
                 changes=[
                     "Bổ sung hàm authenticate_user truy vấn bảng users",
@@ -1146,5 +1159,3 @@ class UserRepository:
     def count_users(self) -> int:
         """Return total count of registered users."""
         return self.session.scalar(select(func.count(User.id))) or 0
-
-

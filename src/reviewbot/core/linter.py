@@ -183,8 +183,7 @@ class PythonASTVisitor(ast.NodeVisitor):
                             ),
                             evidence=self._get_evidence(handler.lineno) or "except:",
                             suggestion=(
-                                "except Exception as exc:\n"
-                                "    logger.error('Failed: %s', exc)"
+                                "except Exception as exc:\n    logger.error('Failed: %s', exc)"
                             ),
                             confidence=0.9,
                         )

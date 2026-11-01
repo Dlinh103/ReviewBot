@@ -178,9 +178,8 @@ async def github_webhook(
 
         comment = payload.get("comment", {})
         comment_user = comment.get("user", {})
-        if (
-            comment_user.get("type", "").lower() == "bot"
-            or comment_user.get("login", "").endswith("[bot]")
+        if comment_user.get("type", "").lower() == "bot" or comment_user.get("login", "").endswith(
+            "[bot]"
         ):
             return {"status": "ignored", "reason": "Comment is by a bot"}
 
@@ -211,7 +210,9 @@ async def github_webhook(
         handle_pr_command.delay(cmd_payload)
         logger.info(
             "Dispatched slash command '%s' for PR %s#%s",
-            matched_cmd, repo_full_name, pr_number,
+            matched_cmd,
+            repo_full_name,
+            pr_number,
         )
         _persist_delivery(
             x_github_delivery,
@@ -307,8 +308,12 @@ async def github_webhook(
     base_sha = pr.get("base", {}).get("sha")
 
     if not repo_full_name or not pr_number or not head_sha:
-        logger.error("Missing mandatory fields in PR payload (repo=%s, pr=%s, sha=%s)",
-                     repo_full_name, pr_number, head_sha)
+        logger.error(
+            "Missing mandatory fields in PR payload (repo=%s, pr=%s, sha=%s)",
+            repo_full_name,
+            pr_number,
+            head_sha,
+        )
         _persist_delivery(
             x_github_delivery,
             "pull_request",
