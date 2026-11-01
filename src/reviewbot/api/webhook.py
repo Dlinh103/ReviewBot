@@ -12,7 +12,7 @@ from reviewbot.config import Settings, get_settings
 from reviewbot.db.repositories import ReviewRepository
 from reviewbot.db.session import create_all_tables, get_db_session
 from reviewbot.github.signature import verify_github_signature
-from reviewbot.worker.tasks import review_pull_request
+from reviewbot.worker.tasks import handle_pr_command, review_pull_request
 
 router = APIRouter(prefix="/webhook", tags=["Webhook"])
 logger = logging.getLogger("reviewbot.webhook")
@@ -103,8 +103,8 @@ async def github_webhook(
         )
         return {"status": "ok", "message": "Pong"}
 
-    # 3. Only handle pull_request events
-    if x_github_event != "pull_request":
+    # 3. Only handle pull_request and issue_comment events
+    if x_github_event not in ("pull_request", "issue_comment"):
         logger.info(
             "Ignored unsupported event '%s' (delivery=%s)",
             x_github_event,
@@ -132,7 +132,7 @@ async def github_webhook(
         logger.error("Failed to parse webhook JSON body: %s", exc)
         _persist_delivery(
             x_github_delivery,
-            "pull_request",
+            x_github_event or "unknown",
             None,
             None,
             "failed",
@@ -145,6 +145,92 @@ async def github_webhook(
             detail="Invalid JSON payload",
         ) from exc
 
+    # 5. Handle issue_comment events (slash commands: /review, /explain, /suggest-test)
+    if x_github_event == "issue_comment":
+        action = payload.get("action")
+        if action != "created":
+            logger.info("Ignored issue_comment action '%s'", action)
+            _persist_delivery(
+                x_github_delivery,
+                "issue_comment",
+                action,
+                payload.get("repository", {}).get("full_name"),
+                "ignored",
+                status.HTTP_200_OK,
+                int((time.perf_counter() - start_time) * 1000),
+                summary=f"Unsupported issue_comment action: {action}",
+            )
+            return {"status": "ignored", "reason": f"Unsupported issue_comment action: {action}"}
+
+        issue = payload.get("issue", {})
+        if "pull_request" not in issue:
+            _persist_delivery(
+                x_github_delivery,
+                "issue_comment",
+                action,
+                payload.get("repository", {}).get("full_name"),
+                "ignored",
+                status.HTTP_200_OK,
+                int((time.perf_counter() - start_time) * 1000),
+                summary="Comment is not on a pull request",
+            )
+            return {"status": "ignored", "reason": "Comment is not on a pull request"}
+
+        comment = payload.get("comment", {})
+        comment_user = comment.get("user", {})
+        if (
+            comment_user.get("type", "").lower() == "bot"
+            or comment_user.get("login", "").endswith("[bot]")
+        ):
+            return {"status": "ignored", "reason": "Comment is by a bot"}
+
+        body_text = comment.get("body", "").strip()
+        matched_cmd = None
+        for cmd in ("/review", "/explain", "/suggest-test"):
+            if body_text.startswith(cmd) or f"\n{cmd}" in body_text:
+                matched_cmd = cmd
+                break
+
+        if not matched_cmd:
+            return {"status": "ignored", "reason": "No supported slash command found"}
+
+        repo = payload.get("repository", {})
+        repo_full_name = repo.get("full_name")
+        pr_number = issue.get("number")
+        installation_id = payload.get("installation", {}).get("id")
+
+        cmd_payload = {
+            "command": matched_cmd,
+            "repo_full_name": repo_full_name,
+            "pr_number": pr_number,
+            "installation_id": installation_id,
+            "author": comment_user.get("login", "developer"),
+            "comment_body": body_text,
+        }
+
+        handle_pr_command.delay(cmd_payload)
+        logger.info(
+            "Dispatched slash command '%s' for PR %s#%s",
+            matched_cmd, repo_full_name, pr_number,
+        )
+        _persist_delivery(
+            x_github_delivery,
+            "issue_comment",
+            action,
+            repo_full_name,
+            "enqueued",
+            status.HTTP_202_ACCEPTED,
+            int((time.perf_counter() - start_time) * 1000),
+            summary=f"Command {matched_cmd} enqueued for PR #{pr_number}",
+        )
+        return {
+            "status": "enqueued",
+            "command": matched_cmd,
+            "repo": repo_full_name,
+            "pr_number": pr_number,
+        }
+
+    # 6. Handle pull_request events
     action = payload.get("action")
     if action not in SUPPORTED_ACTIONS:
         logger.info("Ignored pull_request action '%s'", action)

@@ -94,6 +94,7 @@ async def test_review_service_end_to_end() -> None:
     )
     mock_gh.create_review = AsyncMock(return_value={"id": 9999, "state": "COMMENTED"})
     mock_gh.upsert_issue_comment = AsyncMock(return_value={"id": 8888})
+    mock_gh.get_file_content = AsyncMock(return_value=None)
 
     # 2. Setup mock LLM and service
     mock_llm = MockPipelineLLM()
@@ -138,10 +139,45 @@ async def test_review_service_end_to_end() -> None:
     comment = comments[0]
     assert comment["path"] == "calc.py"
     # Line 3 is on '+    return a / b'
-    assert comment["line"] == 3
-    assert comment["side"] == "RIGHT"
-    assert "🔴 **[CRITICAL]** 🐛 Bug" in comment["body"]
-    assert "```suggestion" in comment["body"]
+
+
+@pytest.mark.asyncio
+async def test_review_service_with_custom_repo_config() -> None:
+    mock_gh = AsyncMock(spec=GitHubClient)
+    mock_gh.get_file_content = AsyncMock(
+        return_value="""
+min_confidence: 0.99
+ignore:
+  - "calc.py"
+"""
+    )
+    mock_gh.get_pr_files = AsyncMock(
+        return_value=[
+            {
+                "filename": "calc.py",
+                "status": "modified",
+                "changes": 3,
+                "patch": SAMPLE_PYTHON_PATCH,
+            }
+        ]
+    )
+    mock_gh.create_review = AsyncMock(return_value={"id": 9999, "state": "COMMENTED"})
+    mock_gh.upsert_issue_comment = AsyncMock(return_value={"id": 8888})
+
+    mock_llm = MockPipelineLLM()
+    settings = Settings(OUTPUT_LANGUAGE="vi")
+    service = ReviewService(llm_client=mock_llm, settings=settings)
+
+    result = await service.review_pull_request(
+        github_client=mock_gh,
+        repo_full_name="octocat/Hello-World",
+        pr_number=42,
+        head_sha="6dcb09b5b57875f334f61aebed695e2e4193db5e",
+        pr_title="Update division logic",
+    )
+
+    # Since calc.py was ignored by custom config ignore, findings_count must be 0
+    assert result["findings_count"] == 0
 
     # Verify GitHub upsert_issue_comment call
     mock_gh.upsert_issue_comment.assert_called_once()

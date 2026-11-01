@@ -1,0 +1,13 @@
+{
+  "id": "SEC-01",
+  "title": "SQL Injection via f-string",
+  "filename": "auth_service.py",
+  "patch": "@@ -1,5 +1,6 @@\n def authenticate_user(cursor, username, password):\n-    return None\n+    query = f\"SELECT * FROM users WHERE username = '{username}'\"\n+    return cursor.execute(query)\n",
+  "expected": [
+    {
+      "category": "security",
+      "severity": "critical",
+      "line": 4
+    }
+  ]
+}

@@ -89,15 +89,22 @@ class PostProcessor:
         self,
         findings: list[Finding],
         file_diffs_map: dict[str, FileDiff],
+        min_confidence: float | None = None,
+        max_comments: int | None = None,
     ) -> list[Finding]:
         """Apply all post-processing rules to raw LLM findings."""
+        target_min_confidence = (
+            min_confidence if min_confidence is not None else self.min_confidence
+        )
+        target_max_comments = max_comments if max_comments is not None else self.max_comments
+
         # 1. Filter by confidence threshold
         confident: list[Finding] = [
-            f for f in findings if f.confidence >= self.min_confidence
+            f for f in findings if f.confidence >= target_min_confidence
         ]
         logger.info(
             "Confidence filter (>= %.2f): %d/%d findings passed",
-            self.min_confidence,
+            target_min_confidence,
             len(confident),
             len(findings),
         )
@@ -155,8 +162,8 @@ class PostProcessor:
         )
 
         # 5. Cap maximum comments per PR
-        capped = ranked[: self.max_comments]
-        if len(ranked) > self.max_comments:
-            logger.info("Capped comments from %d to %d", len(ranked), self.max_comments)
+        capped = ranked[:target_max_comments]
+        if len(ranked) > target_max_comments:
+            logger.info("Capped comments from %d to %d", len(ranked), target_max_comments)
 
         return capped

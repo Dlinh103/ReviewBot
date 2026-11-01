@@ -1,0 +1,7 @@
+{
+  "id": "CTRL-06",
+  "title": "Clean Math Utility (Control)",
+  "filename": "math_utils.py",
+  "patch": "@@ -1,4 +1,5 @@\n def safe_add(a: int, b: int) -> int:\n-    return 0\n+    \"\"\"Return the sum of two integers safely.\"\"\"\n+    return a + b\n",
+  "expected": []
+}

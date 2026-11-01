@@ -1,0 +1,13 @@
+{
+  "id": "SEC-04",
+  "title": "Hardcoded API Secret Token",
+  "filename": "config.py",
+  "patch": "@@ -1,3 +1,4 @@\n import os\n+api_key = \"ghp_1234567890abcdefghijklmnopqrstuv\"\n",
+  "expected": [
+    {
+      "category": "security",
+      "severity": "critical",
+      "line": 2
+    }
+  ]
+}

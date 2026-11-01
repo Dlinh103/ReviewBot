@@ -13,11 +13,15 @@ from reviewbot.main import app
 @pytest.fixture(autouse=True)
 def init_db(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Settings:
     test_db = tmp_path / "test_dash.db"
+    sqlite_url = f"sqlite:///{test_db}"
+    monkeypatch.setenv("DATABASE_URL", sqlite_url)
+    monkeypatch.setenv("GITHUB_WEBHOOK_SECRET", "test-secret")
     test_settings = Settings(
-        DATABASE_URL=f"sqlite:///{test_db}",
+        DATABASE_URL=sqlite_url,
         GITHUB_WEBHOOK_SECRET="test-secret",
     )
     monkeypatch.setattr("reviewbot.config.get_settings", lambda: test_settings)
+    monkeypatch.setattr("reviewbot.db.session.get_settings", lambda: test_settings)
     reset_engine()
     create_all_tables()
     return test_settings
@@ -152,4 +156,26 @@ async def test_dashboard_webhooks_and_config() -> None:
         updated = update_resp.json()
         assert updated["config"]["language"] == "en"
         assert updated["config"]["min_confidence"] == 0.85
+
+
+@pytest.mark.asyncio
+async def test_dashboard_benchmark_api() -> None:
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as client:
+        # 1. Get benchmark report
+        bench_resp = await client.get("/api/dashboard/benchmark")
+        assert bench_resp.status_code == 200
+        data = bench_resp.json()
+        assert "precision" in data
+        assert "recall" in data
+        assert "f1_score" in data
+        assert "cases" in data
+
+        # 2. Run benchmark suite
+        run_resp = await client.post("/api/dashboard/benchmark/run")
+        assert run_resp.status_code == 200
+        run_data = run_resp.json()
+        assert run_data["status"] == "success"
+        assert "markdown_table" in run_data
+        assert run_data["report"]["precision"] >= 0.85
 

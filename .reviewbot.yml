@@ -1,0 +1,30 @@
+# ReviewBot Configuration File (.reviewbot.yml)
+# Place this file in repository root or .github/.reviewbot.yml
+
+# Language for review comments and summaries (e.g. 'vi', 'en')
+language: vi
+
+# Minimum confidence threshold (0.0 to 1.0) to post inline comments
+min_confidence: 0.7
+
+# Maximum number of inline comments posted per review
+max_comments: 15
+
+# Additional ignore patterns beyond defaults (globs)
+ignore:
+  - "docs/**"
+  - "*.md"
+  - "tests/fixtures/**"
+  - "migrations/**"
+  - "*.sample"
+
+# Focus categories to prioritize (security, bug, performance, style)
+focus:
+  - "security"
+  - "bug"
+  - "performance"
+
+# Custom rule flags
+rules:
+  no_eval: true
+  enforce_parameter_validation: true

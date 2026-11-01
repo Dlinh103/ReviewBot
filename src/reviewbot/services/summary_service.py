@@ -95,20 +95,27 @@ class SummaryService:
         pr_title: str,
         pr_description: str,
         diff_overview: str,
+        language: str | None = None,
     ) -> tuple[PRSummary, LLMResponse, dict[str, Any]]:
         """Generate PR summary via LLM and upsert comment on GitHub."""
-        logger.info("Generating PR summary for %s#%s", repo_full_name, pr_number)
+        target_lang = language or self.settings.OUTPUT_LANGUAGE
+        logger.info(
+            "Generating PR summary for %s#%s in language '%s'",
+            repo_full_name,
+            pr_number,
+            target_lang,
+        )
         summary, telemetry = await summarize_pr(
             llm_client=self.llm_client,
             pr_title=pr_title,
             pr_description=pr_description,
             diff_overview=diff_overview,
-            output_language=self.settings.OUTPUT_LANGUAGE,
+            output_language=target_lang,
         )
 
         comment_markdown = format_pr_summary_markdown(
             summary,
-            language=self.settings.OUTPUT_LANGUAGE,
+            language=target_lang,
         )
 
         comment_res = await github_client.upsert_issue_comment(

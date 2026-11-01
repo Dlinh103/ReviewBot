@@ -1,0 +1,13 @@
+{
+  "id": "BUG-03",
+  "title": "Division by Zero in Ratio Calculation",
+  "filename": "analytics.py",
+  "patch": "@@ -1,4 +1,5 @@\n def compute_ratio(total, count):\n-    return 0\n+    ratio = total / 0\n+    return ratio\n",
+  "expected": [
+    {
+      "category": "bug",
+      "severity": "critical",
+      "line": 3
+    }
+  ]
+}

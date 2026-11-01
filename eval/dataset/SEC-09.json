@@ -1,0 +1,13 @@
+{
+  "id": "SEC-09",
+  "title": "Command Injection via os.system",
+  "filename": "backup.py",
+  "patch": "@@ -1,4 +1,5 @@\n import os\n def run_archive(folder_path):\n-    pass\n+    os.system(\"tar -czf backup.tar.gz \" + folder_path)\n",
+  "expected": [
+    {
+      "category": "security",
+      "severity": "major",
+      "line": 4
+    }
+  ]
+}

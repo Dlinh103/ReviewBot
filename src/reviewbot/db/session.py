@@ -15,13 +15,29 @@ logger = logging.getLogger("reviewbot.db.session")
 
 _engine: Engine | None = None
 _SessionFactory: sessionmaker[Session] | None = None
+_tables_initialized: bool = False
+
+
+def ensure_tables_created(engine: Engine | None = None) -> None:
+    """Ensure database schema and all tables exist in target database."""
+    global _tables_initialized
+    if not _tables_initialized:
+        try:
+            target_engine = engine or get_engine()
+            Base.metadata.create_all(bind=target_engine)
+            _tables_initialized = True
+            logger.info("Database tables verified and initialized successfully.")
+        except Exception as exc:
+            logger.warning("Could not auto-create tables: %s", exc)
 
 
 def get_engine(database_url: str | None = None) -> Engine:
     """Return singleton SQLAlchemy engine or create one with provided URL."""
     global _engine
     if _engine is None or database_url is not None:
-        url = database_url or get_settings().DATABASE_URL
+        import os
+
+        url = database_url or os.environ.get("DATABASE_URL") or get_settings().DATABASE_URL
         # SQLite needs specific connect_args for multithreading
         connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
         engine = create_engine(
@@ -41,9 +57,11 @@ def get_session_factory(engine: Engine | None = None) -> sessionmaker[Session]:
     global _SessionFactory
     if _SessionFactory is None or engine is not None:
         target_engine = engine or get_engine()
+        ensure_tables_created(target_engine)
         factory = sessionmaker(
             autocommit=False,
             autoflush=False,
+            expire_on_commit=False,
             bind=target_engine,
         )
         if engine is None:
@@ -71,16 +89,24 @@ def get_db_session(
 
 def reset_engine() -> None:
     """Reset cached engine and session factory."""
-    global _engine, _SessionFactory
+    global _engine, _SessionFactory, _tables_initialized
     if _engine is not None:
-        _engine.dispose()
+        try:
+            _engine.dispose()
+        except Exception:
+            pass
         _engine = None
     _SessionFactory = None
+    _tables_initialized = False
 
 
 def ensure_database_exists(database_url: str | None = None) -> None:
     """Ensure target PostgreSQL or MySQL database exists before creating tables."""
-    url_str = database_url or get_settings().DATABASE_URL
+    import os
+
+    url_str = database_url or os.environ.get("DATABASE_URL") or get_settings().DATABASE_URL
+    if not url_str or url_str.startswith("sqlite") or ":memory:" in url_str:
+        return
     if url_str.startswith("mysql"):
         try:
             from sqlalchemy import make_url

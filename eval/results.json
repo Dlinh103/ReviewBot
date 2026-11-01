@@ -1,0 +1,126 @@
+{
+  "total_cases": 10,
+  "vulnerable_cases": 6,
+  "control_cases": 4,
+  "true_positives": 6,
+  "false_positives": 0,
+  "false_negatives": 0,
+  "precision": 1.0,
+  "recall": 1.0,
+  "f1_score": 1.0,
+  "avg_latency_ms": 0.0,
+  "total_latency_ms": 0,
+  "cost_usd": 0.0,
+  "cases": [
+    {
+      "case_id": "SEC-01",
+      "title": "SQL Injection via f-string",
+      "filename": "auth_service.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "SEC-02",
+      "title": "Arbitrary Code Execution via eval",
+      "filename": "formula_evaluator.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "BUG-03",
+      "title": "Division by Zero in Ratio Calculation",
+      "filename": "analytics.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "SEC-04",
+      "title": "Hardcoded API Secret Token",
+      "filename": "config.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "BUG-05",
+      "title": "Bare Exception Clause Masking Errors",
+      "filename": "worker.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "CTRL-06",
+      "title": "Clean Math Utility (Control)",
+      "filename": "math_utils.py",
+      "true_positives": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 0,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "CTRL-07",
+      "title": "Clean Pydantic Data Model (Control)",
+      "filename": "models.py",
+      "true_positives": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 0,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "CTRL-08",
+      "title": "Clean Database Query (Control)",
+      "filename": "repository.py",
+      "true_positives": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 0,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "SEC-09",
+      "title": "Command Injection via os.system",
+      "filename": "backup.py",
+      "true_positives": 1,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 1,
+      "duration_ms": 0,
+      "passed": true
+    },
+    {
+      "case_id": "CTRL-10",
+      "title": "Clean FastAPI Route (Control)",
+      "filename": "router.py",
+      "true_positives": 0,
+      "false_positives": 0,
+      "false_negatives": 0,
+      "findings_detected": 0,
+      "duration_ms": 0,
+      "passed": true
+    }
+  ]
+}

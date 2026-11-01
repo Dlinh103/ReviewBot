@@ -17,7 +17,10 @@ TEST_SECRET = "webhook-test-secret"
 @pytest.fixture(autouse=True)
 def mock_celery_task() -> Generator[MagicMock, None, None]:
     """Globally mock Celery delay in all webhook tests to avoid connecting to Redis."""
-    with patch("reviewbot.api.webhook.review_pull_request.delay") as mock_delay:
+    with (
+        patch("reviewbot.api.webhook.review_pull_request.delay") as mock_delay,
+        patch("reviewbot.api.webhook.handle_pr_command.delay"),
+    ):
         yield mock_delay
 
 
@@ -246,3 +249,69 @@ async def test_webhook_accepted_valid_pr(
         assert task_call_args["head_sha"] == "6dcb09b5b57875f334f61aebed695e2e4193db5e"
         assert task_call_args["action"] == action
         assert task_call_args["author"] == "octocat"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("cmd", ["/review", "/explain", "/suggest-test"])
+async def test_webhook_issue_comment_commands(cmd: str) -> None:
+    transport = httpx.ASGITransport(app=app)
+    with patch("reviewbot.api.webhook.handle_pr_command.delay") as mock_cmd:
+        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+            payload = {
+                "action": "created",
+                "installation": {"id": 999},
+                "repository": {"full_name": "octocat/Hello-World"},
+                "issue": {"number": 101, "pull_request": {"url": "https://api.github.com/..."}},
+                "comment": {
+                    "body": f"{cmd} please analyze this PR",
+                    "user": {"login": "alice", "type": "User"},
+                },
+            }
+            body = json.dumps(payload).encode("utf-8")
+            sig = compute_github_signature(body, TEST_SECRET)
+            response = await client.post(
+                "/webhook/github",
+                headers={
+                    "X-GitHub-Event": "issue_comment",
+                    "X-Hub-Signature-256": sig,
+                    "Content-Type": "application/json",
+                },
+                content=body,
+            )
+            assert response.status_code == 202
+            data = response.json()
+            assert data["status"] == "enqueued"
+            assert data["command"] == cmd
+            mock_cmd.assert_called_once()
+            args = mock_cmd.call_args[0][0]
+            assert args["command"] == cmd
+            assert args["pr_number"] == 101
+            assert args["repo_full_name"] == "octocat/Hello-World"
+
+
+@pytest.mark.asyncio
+async def test_webhook_issue_comment_non_pr_ignored() -> None:
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        payload = {
+            "action": "created",
+            "repository": {"full_name": "octocat/Hello-World"},
+            "issue": {"number": 101},  # No pull_request key -> regular issue
+            "comment": {
+                "body": "/review",
+                "user": {"login": "alice", "type": "User"},
+            },
+        }
+        body = json.dumps(payload).encode("utf-8")
+        sig = compute_github_signature(body, TEST_SECRET)
+        response = await client.post(
+            "/webhook/github",
+            headers={
+                "X-GitHub-Event": "issue_comment",
+                "X-Hub-Signature-256": sig,
+                "Content-Type": "application/json",
+            },
+            content=body,
+        )
+        assert response.status_code == 202
+        assert response.json()["status"] == "ignored"

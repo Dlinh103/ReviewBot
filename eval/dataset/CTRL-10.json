@@ -1,0 +1,7 @@
+{
+  "id": "CTRL-10",
+  "title": "Clean FastAPI Route (Control)",
+  "filename": "router.py",
+  "patch": "@@ -1,4 +1,6 @@\n from fastapi import APIRouter\n router = APIRouter()\n+@router.get('/health')\n+def health_check():\n+    return {'status': 'healthy'}\n",
+  "expected": []
+}

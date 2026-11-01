@@ -1,0 +1,7 @@
+{
+  "id": "CTRL-08",
+  "title": "Clean Database Query (Control)",
+  "filename": "repository.py",
+  "patch": "@@ -1,4 +1,6 @@\n async def fetch_user(session, user_id: int):\n-    return None\n+    stmt = select(User).where(User.id == user_id)\n+    return await session.scalar(stmt)\n",
+  "expected": []
+}

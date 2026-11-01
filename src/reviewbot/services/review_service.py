@@ -7,8 +7,10 @@ from typing import Any
 
 from reviewbot.config import Settings, get_settings
 from reviewbot.core.chunker import DiffChunk, DiffChunker
+from reviewbot.core.config_loader import RepoConfig, parse_repo_config
 from reviewbot.core.diff_parser import FileDiff, parse_patch
 from reviewbot.core.file_filter import FileFilter
+from reviewbot.core.linter import CodeLinter
 from reviewbot.core.postprocess import PostProcessor, format_inline_comment
 from reviewbot.core.secrets_scrubber import scrub_secrets
 from reviewbot.github.client import GitHubClient
@@ -33,6 +35,7 @@ class ReviewService:
         self.settings = settings or get_settings()
         self.max_concurrency = max_concurrency
         self.file_filter = FileFilter()
+        self.linter = CodeLinter()
         self.chunker = DiffChunker(max_tokens_per_chunk=self.settings.MAX_DIFF_TOKENS_PER_CHUNK)
         self.postprocessor = PostProcessor(
             min_confidence=self.settings.MIN_CONFIDENCE,
@@ -56,13 +59,28 @@ class ReviewService:
             repo_full_name, pr_number, head_sha,
         )
 
+        # 0. Load repository custom config (.reviewbot.yml) if available
+        repo_config = RepoConfig()
+        for cfg_name in [".reviewbot.yml", ".reviewbot.yaml", ".github/.reviewbot.yml"]:
+            try:
+                cfg_content = await github_client.get_file_content(
+                    repo_full_name, cfg_name, ref=head_sha
+                )
+                if cfg_content:
+                    repo_config = parse_repo_config(cfg_content)
+                    logger.info("Loaded custom .reviewbot config from %s", cfg_name)
+                    break
+            except Exception as exc:
+                logger.debug("Config check failed for %s: %s", cfg_name, exc)
+
         # 1. Fetch changed files from GitHub
         raw_files = await github_client.get_pr_files(repo_full_name, pr_number)
 
-        # 2. Filter files (ignore lock files, binaries, capped at MAX_FILES_PER_PR)
+        # 2. Filter files (ignore lock files, binaries, custom ignore rules, capped at MAX_FILES)
         retained_files, skipped_files = self.file_filter.filter_files(
             raw_files,
             max_files=self.settings.MAX_FILES_PER_PR,
+            extra_ignore_patterns=repo_config.ignore,
         )
         logger.info(
             "File filtering: %d retained, %d skipped for %s#%s",
@@ -72,15 +90,27 @@ class ReviewService:
             pr_number,
         )
 
-        # 3. Parse patches, scrub secrets, and collect file diffs
+        # 3. Parse patches, run static AST linter, scrub secrets, and collect diff chunks
         file_diffs_map: dict[str, FileDiff] = {}
         all_chunks: list[DiffChunk] = []
         diff_overview_lines: list[str] = []
+        all_findings: list[Finding] = []
 
         for f in retained_files:
             filename = f.get("filename", "")
             status = f.get("status", "modified")
             raw_patch = f.get("patch", "")
+
+            # Run deterministic static AST & security linter
+            if raw_patch:
+                static_findings = self.linter.lint_file_diff(filename, raw_patch)
+                if static_findings:
+                    logger.info(
+                        "Linter detected %d finding(s) in %s",
+                        len(static_findings),
+                        filename,
+                    )
+                    all_findings.extend(static_findings)
 
             # Scrub secrets before any LLM chunking
             clean_patch, redactions = scrub_secrets(raw_patch)
@@ -102,7 +132,6 @@ class ReviewService:
         total_input_tokens = 0
         total_output_tokens = 0
         total_cost_usd = 0.0
-        all_findings: list[Finding] = []
 
         async def process_chunk(chunk: DiffChunk) -> list[Finding]:
             nonlocal total_input_tokens, total_output_tokens, total_cost_usd
@@ -127,12 +156,17 @@ class ReviewService:
                 all_findings.extend(findings)
 
         logger.info(
-            "Raw LLM findings collected: %d across %d chunks",
+            "Raw findings collected: %d (LLM + static linter) across %d chunks",
             len(all_findings), len(all_chunks),
         )
 
         # 5. Post-process findings (confidence, diff validity, deduplication, ranking, capping)
-        final_findings = self.postprocessor.process_findings(all_findings, file_diffs_map)
+        final_findings = self.postprocessor.process_findings(
+            all_findings,
+            file_diffs_map,
+            min_confidence=repo_config.min_confidence,
+            max_comments=repo_config.max_comments,
+        )
         logger.info("Final findings to publish: %d", len(final_findings))
 
         # 6. Format and submit GitHub Review with inline comments
@@ -189,6 +223,7 @@ class ReviewService:
             pr_title=pr_title,
             pr_description=pr_body,
             diff_overview=diff_overview_text,
+            language=repo_config.language,
         )
 
         total_input_tokens += sum_tele.input_tokens

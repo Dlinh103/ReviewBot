@@ -79,6 +79,7 @@ class FileFilter:
         status: str = "modified",
         changes: int = 0,
         patch: str | None = None,
+        extra_ignore_patterns: list[str] | None = None,
     ) -> tuple[bool, str]:
         """Check if a single file should be ignored."""
         normalized_path = path.replace("\\", "/").lstrip("/")
@@ -92,7 +93,8 @@ class FileFilter:
             return True, "Binary or missing patch"
 
         # 3. Check pattern matches
-        for pattern in self.ignore_patterns:
+        all_patterns = self.ignore_patterns + (extra_ignore_patterns or [])
+        for pattern in all_patterns:
             pattern_norm = pattern.replace("\\", "/").lstrip("/")
             if fnmatch(normalized_path, pattern_norm):
                 return True, f"Matched ignore pattern '{pattern}'"
@@ -111,6 +113,7 @@ class FileFilter:
         self,
         files: list[dict[str, Any]],
         max_files: int = 40,
+        extra_ignore_patterns: list[str] | None = None,
     ) -> tuple[list[dict[str, Any]], list[tuple[str, str]]]:
         """Filter a list of GitHub file objects.
 
@@ -126,7 +129,13 @@ class FileFilter:
             changes = f.get("changes", 0)
             patch = f.get("patch")
 
-            ignored, reason = self.is_ignored(filename, status=status, changes=changes, patch=patch)
+            ignored, reason = self.is_ignored(
+                filename,
+                status=status,
+                changes=changes,
+                patch=patch,
+                extra_ignore_patterns=extra_ignore_patterns,
+            )
             if ignored:
                 skipped.append((filename, reason))
                 logger.info("Skipping file '%s': %s", filename, reason)

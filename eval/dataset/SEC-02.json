@@ -1,0 +1,13 @@
+{
+  "id": "SEC-02",
+  "title": "Arbitrary Code Execution via eval",
+  "filename": "formula_evaluator.py",
+  "patch": "@@ -1,4 +1,5 @@\n def parse_and_run(expr):\n-    return 0\n+    # Dynamic calculation\n+    return eval(expr)\n",
+  "expected": [
+    {
+      "category": "security",
+      "severity": "critical",
+      "line": 4
+    }
+  ]
+}

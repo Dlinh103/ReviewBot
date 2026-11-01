@@ -1,0 +1,13 @@
+{
+  "id": "BUG-05",
+  "title": "Bare Exception Clause Masking Errors",
+  "filename": "worker.py",
+  "patch": "@@ -1,4 +1,6 @@\n def sync_data():\n-    pass\n+    try:\n+        sync()\n+    except:\n+        pass\n",
+  "expected": [
+    {
+      "category": "bug",
+      "severity": "minor",
+      "line": 5
+    }
+  ]
+}

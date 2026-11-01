@@ -1,6 +1,7 @@
 """Database access repositories for ReviewBot entities."""
 
 import logging
+from datetime import UTC, datetime
 from typing import Any
 
 from sqlalchemy import func, select
@@ -18,6 +19,7 @@ from reviewbot.db.models import (
     ReviewStatus,
     Severity,
     SystemRuleConfig,
+    User,
     WebhookDelivery,
 )
 from reviewbot.llm.schemas import Finding, PRSummary
@@ -400,6 +402,7 @@ class ReviewRepository:
                 .join(PullRequest, Review.pr_id == PullRequest.id)
                 .where(PullRequest.repo_id == r.id)
             ) or 0
+            cfg = r.config_json or {}
             result.append({
                 "id": r.id,
                 "github_repo_id": r.github_repo_id,
@@ -408,9 +411,26 @@ class ReviewRepository:
                 "created_at": r.created_at.isoformat() if r.created_at else None,
                 "prs_count": pr_count,
                 "findings_count": findings_count,
-                "config": r.config_json or {},
+                "is_active": cfg.get("is_active", True),
+                "config": cfg,
             })
         return result
+
+    def toggle_repository_active(self, repo_id: int) -> dict[str, Any] | None:
+        """Toggle active auto-review state for a repository."""
+        repo = self.session.get(Repository, repo_id)
+        if not repo:
+            return None
+        cfg = dict(repo.config_json or {})
+        current = cfg.get("is_active", True)
+        cfg["is_active"] = not current
+        repo.config_json = cfg
+        self.session.flush()
+        return {
+            "id": repo.id,
+            "full_name": repo.full_name,
+            "is_active": cfg["is_active"],
+        }
 
     def create_repository(
         self,
@@ -950,17 +970,181 @@ class ReviewRepository:
                 "review_drafts": False,
                 "severity_threshold": "minor",
                 "raw_yaml": (
-                    "version: 1\\n"
-                    "language: vi\\n"
-                    "rules:\\n"
-                    "  min_confidence: 0.80\\n"
-                    "  post_summary: true\\n"
-                    "  review_drafts: false\\n"
-                    "  severity_threshold: minor\\n"
+                    "version: 1\n"
+                    "language: vi\n"
+                    "rules:\n"
+                    "  min_confidence: 0.80\n"
+                    "  post_summary: true\n"
+                    "  review_drafts: false\n"
+                    "  severity_threshold: minor\n"
                 ),
             }
         )
 
+        # 7. Default Demo User
+        user_repo = UserRepository(self.session)
+        if not user_repo.get_by_username("vu_admin"):
+            user_repo.create_user(
+                username="vu_admin",
+                email="admin@vku.udn.vn",
+                password="Admin@123456",
+                full_name="Vũ Nguyễn",
+                avatar_url=None,
+                is_superuser=True,
+            )
+
         self.session.flush()
         logger.info("Database initialized with rich sample demo records successfully.")
+
+    def get_audit_report(self) -> dict[str, Any]:
+        """Generate high-level compliance and defect escape audit report."""
+        stats = self.get_dashboard_stats()
+        reviews = self.get_recent_reviews(limit=50)
+        repos = self.get_all_repositories()
+
+        stmt = (
+            select(FindingModel)
+            .where(FindingModel.severity.in_([Severity.CRITICAL, Severity.MAJOR]))
+            .order_by(FindingModel.id.desc())
+            .limit(20)
+        )
+        critical_findings = [
+            {
+                "id": f.id,
+                "file": f.file_path,
+                "line": f.line_start,
+                "severity": f.severity.value,
+                "category": f.category.value,
+                "message": f.message,
+                "pr_id": f.review.pr_id if f.review else None,
+            }
+            for f in self.session.scalars(stmt)
+        ]
+
+        return {
+            "title": "ReviewBot AI Code Quality & Security Audit Report",
+            "organization": "VKU SE Platform",
+            "generated_at": datetime.now(UTC).isoformat(),
+            "summary": {
+                "total_prs_analyzed": stats.get("total_prs", 0),
+                "total_findings": stats.get("total_findings", 0),
+                "critical_security_count": stats.get("severity_breakdown", {}).get("critical", 0),
+                "total_cost_usd": stats.get("total_cost_usd", 0.0),
+                "avg_latency_ms": stats.get("avg_latency_ms", 0),
+                "active_repositories_count": len(repos),
+            },
+            "repositories": repos,
+            "critical_findings": critical_findings,
+            "recent_reviews_sample": reviews[:10],
+            "compliance_status": {
+                "secrets_detection": "ACTIVE - High entropy & token regex scan enabled",
+                "sql_injection_defense": "ACTIVE - AST and heuristic scan active",
+                "owasp_top_10_coverage": "COMPLIANT (A01:Access, A03:Injection, A07:Auth)",
+            },
+        }
+
+
+class UserRepository:
+    """Repository managing User records, authentication, and profiles."""
+
+    def __init__(self, session: Session) -> None:
+        self.session = session
+
+    def get_by_id(self, user_id: int) -> User | None:
+        """Fetch user by primary key."""
+        return self.session.get(User, user_id)
+
+    def get_by_username(self, username: str) -> User | None:
+        """Fetch user by unique username (case-insensitive)."""
+        stmt = select(User).where(func.lower(User.username) == username.lower().strip())
+        return self.session.scalar(stmt)
+
+    def get_by_email(self, email: str) -> User | None:
+        """Fetch user by unique email address (case-insensitive)."""
+        stmt = select(User).where(func.lower(User.email) == email.lower().strip())
+        return self.session.scalar(stmt)
+
+    def get_by_identifier(self, identifier: str) -> User | None:
+        """Fetch user by username or email."""
+        clean = identifier.strip().lower()
+        stmt = select(User).where(
+            (func.lower(User.username) == clean) | (func.lower(User.email) == clean)
+        )
+        return self.session.scalar(stmt)
+
+    def create_user(
+        self,
+        username: str,
+        email: str,
+        password: str,
+        full_name: str = "",
+        avatar_url: str | None = None,
+        is_superuser: bool = False,
+    ) -> User:
+        """Create a new registered user with salted hash password."""
+        from reviewbot.core.security import hash_password
+
+        clean_user = username.strip().lower()
+        clean_email = email.strip().lower()
+
+        if self.get_by_username(clean_user):
+            raise ValueError(f"Tên đăng nhập '{clean_user}' đã tồn tại.")
+        if self.get_by_email(clean_email):
+            raise ValueError(f"Địa chỉ email '{clean_email}' đã được đăng ký.")
+
+        user = User(
+            username=clean_user,
+            email=clean_email,
+            hashed_password=hash_password(password),
+            full_name=full_name.strip() or clean_user,
+            avatar_url=avatar_url,
+            is_active=True,
+            is_superuser=is_superuser,
+        )
+        self.session.add(user)
+        self.session.flush()
+        return user
+
+    def authenticate(self, identifier: str, password: str) -> User | None:
+        """Authenticate user by username/email and password."""
+        from reviewbot.core.security import verify_password
+
+        user = self.get_by_identifier(identifier)
+        if not user or not user.is_active:
+            return None
+        if not verify_password(password, user.hashed_password):
+            return None
+        return user
+
+    def list_users(self, limit: int = 50, offset: int = 0) -> list[User]:
+        """List registered platform users."""
+        stmt = select(User).order_by(User.id.asc()).offset(offset).limit(limit)
+        return list(self.session.scalars(stmt))
+
+    def update_profile(
+        self,
+        user_id: int,
+        full_name: str | None = None,
+        avatar_url: str | None = None,
+        new_password: str | None = None,
+    ) -> User | None:
+        """Update user profile information or password."""
+        user = self.get_by_id(user_id)
+        if not user:
+            return None
+        if full_name is not None:
+            user.full_name = full_name.strip()
+        if avatar_url is not None:
+            user.avatar_url = avatar_url.strip()
+        if new_password:
+            from reviewbot.core.security import hash_password
+
+            user.hashed_password = hash_password(new_password)
+        self.session.flush()
+        return user
+
+    def count_users(self) -> int:
+        """Return total count of registered users."""
+        return self.session.scalar(select(func.count(User.id))) or 0
+
 

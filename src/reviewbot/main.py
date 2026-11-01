@@ -7,6 +7,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 
 from reviewbot import __version__
+from reviewbot.api.auth import router as auth_router
 from reviewbot.api.dashboard import router as dashboard_router
 from reviewbot.api.health import router as health_router
 from reviewbot.api.webhook import router as webhook_router
@@ -37,5 +38,6 @@ app = FastAPI(
 )
 
 app.include_router(health_router)
+app.include_router(auth_router)
 app.include_router(webhook_router)
 app.include_router(dashboard_router)

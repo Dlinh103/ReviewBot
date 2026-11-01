@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tài khoản — ReviewBot VKU SE Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e8f5c8;
+      --canvas-mid: #ebf6d0;
+      --canvas-light: #eff8d8;
+      --surface: rgba(255, 255, 255, 0.94);
+      --border: rgba(45, 83, 38, 0.16);
+      --border-2: rgba(45, 83, 38, 0.26);
+      --text: #142817;
+      --muted: #526d56;
+      --emerald: #059669;
+      --emerald-2: #10b981;
+      --rose: #e11d48;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100vh;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(232, 245, 200, 0.95), transparent 45%),
+        radial-gradient(circle at 88% 12%, rgba(239, 248, 216, 0.95), transparent 42%),
+        radial-gradient(circle at 50% 50%, rgba(220, 252, 231, 0.65), transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(246, 249, 218, 0.9), transparent 45%),
+        linear-gradient(135deg, #e8f5c8 0%, #ebf6d0 35%, #eff8d8 70%, #e5f3cc 100%);
+      background-attachment: fixed;
+      color: var(--text);
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-size: 13px;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+    }
+    .auth-container {
+      width: 100%;
+      max-width: 440px;
+      margin: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+    .auth-brand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      text-decoration: none;
+      color: inherit;
+      margin-bottom: 4px;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 12px;
+      display: grid;
+      place-items: center;
+      color: #065f46;
+      background: rgba(16, 185, 129, 0.18);
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.2);
+    }
+    .auth-brand strong {
+      display: block;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      color: var(--text);
+    }
+    .auth-brand span {
+      display: block;
+      font-size: 11px;
+      color: var(--muted);
+      font-weight: 500;
+      margin-top: 1px;
+    }
+    .auth-card {
+      background: var(--surface);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 28px 24px;
+      box-shadow: 0 16px 40px rgba(45, 83, 38, 0.08);
+    }
+    .tab-switch {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      padding: 4px;
+      background: rgba(235, 246, 215, 0.7);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      margin-bottom: 22px;
+      gap: 4px;
+    }
+    .tab-btn {
+      border: 0;
+      background: transparent;
+      padding: 8px 14px;
+      border-radius: 7px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s ease;
+      text-align: center;
+    }
+    .tab-btn.active {
+      background: #ffffff;
+      color: #065f46;
+      box-shadow: 0 2px 8px rgba(45, 83, 38, 0.1);
+    }
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .form-input {
+      width: 100%;
+      height: 40px;
+      padding: 0 13px;
+      border-radius: 9px;
+      border: 1px solid var(--border-2);
+      background: rgba(246, 251, 238, 0.85);
+      color: var(--text);
+      font-size: 13px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-input:focus {
+      outline: none;
+      border-color: var(--emerald-2);
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.22);
+      background: #ffffff;
+    }
+    .form-input::placeholder {
+      color: #8da491;
+    }
+    .btn-submit {
+      width: 100%;
+      height: 42px;
+      border: 1px solid #059669;
+      border-radius: 9px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+      box-shadow: 0 4px 14px rgba(16, 185, 129, 0.25);
+      transition: all 0.18s;
+    }
+    .btn-submit:hover {
+      background: linear-gradient(135deg, #059669, #047857);
+      box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+      transform: translateY(-1px);
+    }
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .btn-demo {
+      width: 100%;
+      height: 38px;
+      border: 1px dashed rgba(16, 185, 129, 0.5);
+      border-radius: 9px;
+      background: rgba(16, 185, 129, 0.08);
+      color: #065f46;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-top: 12px;
+      transition: all 0.15s;
+    }
+    .btn-demo:hover {
+      background: rgba(16, 185, 129, 0.16);
+      border-color: #059669;
+    }
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 12px;
+      color: var(--muted);
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+    .alert-banner {
+      display: none;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 11.5px;
+      margin-bottom: 16px;
+      line-height: 1.4;
+    }
+    .alert-banner.error {
+      display: block;
+      background: rgba(244, 63, 94, 0.12);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+      color: #be123c;
+    }
+    .alert-banner.success {
+      display: block;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.35);
+      color: #065f46;
+    }
+    .auth-footer {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 12px;
+    }
+    .auth-footer a {
+      color: #059669;
+      text-decoration: none;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .auth-footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-container">
+    <a href="/" class="auth-brand">
+      <div class="brand-mark">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <rect x="3" y="11" width="18" height="10" rx="3"></rect>
+          <circle cx="12" cy="5" r="2"></circle>
+          <path d="M12 7v4"></path>
+          <line x1="8" y1="16" x2="8.01" y2="16"></line>
+          <line x1="16" y1="16" x2="16.01" y2="16"></line>
+        </svg>
+      </div>
+      <div>
+        <strong>ReviewBot</strong>
+        <span>VKU SE Platform · Authentication</span>
+      </div>
+    </a>
+
+    <div class="auth-card">
+      <!-- Tab Control -->
+      <div class="tab-switch">
+        <button id="tab-login" class="tab-btn active" onclick="switchTab('login')">Đăng nhập</button>
+        <button id="tab-register" class="tab-btn" onclick="switchTab('register')">Đăng ký</button>
+      </div>
+
+      <!-- Alert Notification Banner -->
+      <div id="alert-banner" class="alert-banner"></div>
+
+      <!-- Login Form -->
+      <form id="login-form" onsubmit="handleLogin(event)">
+        <div class="form-group">
+          <label class="form-label" for="login-identifier">Tên đăng nhập hoặc Email</label>
+          <input id="login-identifier" class="form-input" type="text" placeholder="vu_admin hoặc admin@vku.udn.vn" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="login-password">Mật khẩu</label>
+          <input id="login-password" class="form-input" type="password" placeholder="••••••••" required autocomplete="current-password">
+        </div>
+        <button id="btn-login-submit" type="submit" class="btn-submit">
+          <span>Đăng nhập hệ thống</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+
+        <div class="divider">Hoặc kiểm thử nhanh</div>
+
+        <button type="button" class="btn-demo" onclick="fillDemoAndLogin()">
+          <span>⚡ Đăng nhập tài khoản Demo (vu_admin)</span>
+        </button>
+      </form>
+
+      <!-- Register Form -->
+      <form id="register-form" style="display: none;" onsubmit="handleRegister(event)">
+        <div class="form-group">
+          <label class="form-label" for="reg-fullname">Họ và tên</label>
+          <input id="reg-fullname" class="form-input" type="text" placeholder="Nguyễn Văn A" autocomplete="name">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-username">Tên đăng nhập</label>
+          <input id="reg-username" class="form-input" type="text" placeholder="nguyenvana" required autocomplete="username" pattern="[a-zA-Z0-9_\-\.]{3,50}" title="Ít nhất 3 ký tự, không dấu cách">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-email">Email trường VKU hoặc cá nhân</label>
+          <input id="reg-email" class="form-input" type="email" placeholder="vana@vku.udn.vn" required autocomplete="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="reg-password">Mật khẩu bảo mật</label>
+          <input id="reg-password" class="form-input" type="password" placeholder="Tối thiểu 6 ký tự" required minlength="6" autocomplete="new-password">
+        </div>
+        <button id="btn-register-submit" type="submit" class="btn-submit">
+          <span>Tạo tài khoản mới</span>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>
+        </button>
+      </form>
+    </div>
+
+    <div class="auth-footer">
+      <a href="/">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Quay lại ReviewBot Dashboard
+      </a>
+    </div>
+  </div>
+
+  <script>
+    let DATA_DEFAULT_TAB = 'login';
+
+    function showAlert(message, type = 'error') {
+      const banner = document.getElementById('alert-banner');
+      banner.className = 'alert-banner ' + type;
+      banner.textContent = message;
+      banner.style.display = 'block';
+    }
+
+    function clearAlert() {
+      const banner = document.getElementById('alert-banner');
+      banner.style.display = 'none';
+      banner.textContent = '';
+    }
+
+    function switchTab(tab) {
+      clearAlert();
+      const loginTab = document.getElementById('tab-login');
+      const regTab = document.getElementById('tab-register');
+      const loginForm = document.getElementById('login-form');
+      const regForm = document.getElementById('register-form');
+
+      if (tab === 'register') {
+        loginTab.classList.remove('active');
+        regTab.classList.add('active');
+        loginForm.style.display = 'none';
+        regForm.style.display = 'block';
+        window.history.replaceState(null, '', '/register');
+      } else {
+        regTab.classList.remove('active');
+        loginTab.classList.add('active');
+        regForm.style.display = 'none';
+        loginForm.style.display = 'block';
+        window.history.replaceState(null, '', '/login');
+      }
+    }
+
+    async function handleLogin(e) {
+      e.preventDefault();
+      clearAlert();
+      const btn = document.getElementById('btn-login-submit');
+      const identifier = document.getElementById('login-identifier').value.trim();
+      const password = document.getElementById('login-password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Đang xác thực...</span>';
+
+      try {
+        const resp = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || 'Đăng nhập không thành công.');
+        }
+
+        if (data.access_token) {
+          localStorage.setItem('reviewbot_token', data.access_token);
+        }
+        showAlert('Đăng nhập thành công! Đang chuyển hướng...', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 600);
+      } catch (err) {
+        showAlert(err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>Đăng nhập hệ thống</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>';
+      }
+    }
+
+    async function handleRegister(e) {
+      e.preventDefault();
+      clearAlert();
+      const btn = document.getElementById('btn-register-submit');
+      const fullName = document.getElementById('reg-fullname').value.trim();
+      const username = document.getElementById('reg-username').value.trim();
+      const email = document.getElementById('reg-email').value.trim();
+      const password = document.getElementById('reg-password').value;
+
+      btn.disabled = true;
+      btn.innerHTML = '<span>Đang tạo tài khoản...</span>';
+
+      try {
+        const resp = await fetch('/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ full_name: fullName, username, email, password })
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          throw new Error(data.detail || 'Đăng ký không thành công.');
+        }
+
+        if (data.access_token) {
+          localStorage.setItem('reviewbot_token', data.access_token);
+        }
+        showAlert('Đăng ký tài khoản thành công! Đang chuyển hướng...', 'success');
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 700);
+      } catch (err) {
+        showAlert(err.message);
+        btn.disabled = false;
+        btn.innerHTML = '<span>Tạo tài khoản mới</span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="8.5" cy="7" r="4"></circle><line x1="20" y1="8" x2="20" y2="14"></line><line x1="23" y1="11" x2="17" y2="11"></line></svg>';
+      }
+    }
+
+    function fillDemoAndLogin() {
+      document.getElementById('login-identifier').value = 'vu_admin';
+      document.getElementById('login-password').value = 'Admin@123456';
+      document.getElementById('login-form').dispatchEvent(new Event('submit'));
+    }
+
+    // Initialize initial tab
+    if (window.location.pathname.includes('/register') || DATA_DEFAULT_TAB === 'register') {
+      switchTab('register');
+    }
+  </script>
+</body>
+</html>
