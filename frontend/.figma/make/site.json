@@ -1,0 +1,10 @@
+{
+  "description": "AI-powered code review platform for software teams that analyzes pull requests, flags bugs and security risks, and streamlines fixes with actionable insights.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}

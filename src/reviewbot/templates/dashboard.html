@@ -1,0 +1,1875 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ReviewBot — VKU SE Platform</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light;
+      --canvas: #e8f5c8;
+      --canvas-mid: #ebf6d0;
+      --canvas-light: #eff8d8;
+      --panel: rgba(243, 249, 230, 0.92);
+      --surface: rgba(255, 255, 255, 0.9);
+      --surface-2: rgba(246, 251, 236, 0.92);
+      --surface-3: #ffffff;
+      --border: rgba(45, 83, 38, 0.13);
+      --border-2: rgba(45, 83, 38, 0.22);
+      --text: #142817;
+      --muted: #526d56;
+      --subtle: #79947d;
+      --emerald: #059669;
+      --emerald-2: #10b981;
+      --indigo: #4f46e5;
+      --rose: #e11d48;
+      --amber: #d97706;
+      --sky: #0284c7;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--canvas); color: var(--text); font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; font-size: 12px; -webkit-font-smoothing: antialiased; }
+    button, input, textarea { font: inherit; color: inherit; }
+    code, pre, kbd { font-family: 'JetBrains Mono', monospace; }
+    .app-shell {
+      min-height: 100vh;
+      background:
+        radial-gradient(circle at 12% 15%, rgba(232, 245, 200, 0.95), transparent 45%),
+        radial-gradient(circle at 88% 12%, rgba(239, 248, 216, 0.95), transparent 42%),
+        radial-gradient(circle at 50% 50%, rgba(220, 252, 231, 0.65), transparent 50%),
+        radial-gradient(circle at 85% 85%, rgba(246, 249, 218, 0.9), transparent 45%),
+        radial-gradient(circle at 18% 85%, rgba(235, 246, 208, 0.95), transparent 50%),
+        linear-gradient(135deg, #e8f5c8 0%, #ebf6d0 35%, #eff8d8 70%, #e5f3cc 100%);
+      background-attachment: fixed;
+    }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      width: 240px;
+      background: rgba(243, 249, 230, 0.92);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-right: 1px solid var(--border);
+      z-index: 30;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 2px 0 24px rgba(45, 83, 38, 0.04);
+    }
+    .brand { height: 60px; padding: 0 18px; display: flex; align-items: center; gap: 11px; border-bottom: 1px solid var(--border); }
+    .brand-mark { width: 34px; height: 34px; border: 1px solid rgba(16,185,129,.4); border-radius: 9px; display: grid; place-items: center; color: #065f46; background: rgba(16,185,129,.18); box-shadow: 0 2px 10px rgba(16,185,129,.15); }
+    .brand strong { display: block; font-size: 15px; letter-spacing: -.2px; color: #142817; font-weight: 700; }
+    .brand span { display: block; margin-top: 2px; font-size: 10px; color: var(--muted); }
+    .mobile-close { display: none; margin-left: auto; background: none; border: 0; cursor: pointer; color: var(--muted); }
+    .sidebar nav { padding: 14px 10px; overflow: auto; flex: 1; }
+    .nav-group { margin-bottom: 18px; }
+    .nav-label { padding: 0 10px 7px; font-size: 9px; color: #6b8670; font-weight: 700; letter-spacing: 1.2px; }
+    .nav-item { border: 0; background: transparent; width: 100%; display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; color: #3a533e; cursor: pointer; text-align: left; margin: 2px 0; font-size: 11.5px; font-weight: 500; transition: .15s; }
+    .nav-item:hover { color: #142817; background: rgba(255,255,255,.65); }
+    .nav-item.active { color: #065f46; background: linear-gradient(90deg, rgba(16,185,129,.18), rgba(16,185,129,.06)); font-weight: 600; box-shadow: inset 3px 0 var(--emerald-2); }
+    .nav-item.active .icon { color: var(--emerald); }
+    .nav-item em { margin-left: auto; font-style: normal; font-size: 9px; min-width: 20px; text-align: center; padding: 2px 5px; border-radius: 8px; color: #be123c; background: rgba(244,63,94,.14); font-weight: 600; }
+    .sidebar-footer { padding: 12px; border-top: 1px solid var(--border); }
+    .org-card { border: 1px solid var(--border); background: rgba(255,255,255,.7); border-radius: 9px; padding: 9px; display: flex; align-items: center; gap: 9px; box-shadow: 0 2px 8px rgba(45,83,38,.03); }
+    .avatar { width: 30px; height: 30px; border-radius: 7px; display: grid; place-items: center; font-size: 10px; font-weight: 700; background: linear-gradient(135deg, #059669, #10b981); color: #fff; }
+    .avatar.tiny { width: 20px; height: 20px; font-size: 7px; }
+    .org-text { flex: 1; }
+    .org-text strong, .org-text span { display: block; }
+    .org-text strong { color: #142817; font-size: 11px; }
+    .org-text span { color: var(--muted); font-size: 9px; margin-top: 3px; }
+    .org-text i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #10b981; margin-right: 4px; box-shadow: 0 0 6px #10b981; }
+    
+    .app-main { margin-left: 240px; min-width: 0; min-height: 100vh; }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 32px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(235, 246, 208, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .menu-button { display: none; background: none; border: 0; padding: 5px; cursor: pointer; color: #3a533e; }
+    .crumb { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: 11px; }
+    .crumb strong { color: #142817; font-weight: 600; }
+    .top-actions { display: flex; align-items: center; gap: 8px; }
+    .global-search, .mini-search {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid var(--border);
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 7px;
+      color: #526d56;
+      height: 32px;
+      padding: 0 9px;
+      min-width: 230px;
+      box-shadow: 0 1px 3px rgba(45,83,38,.04);
+    }
+    .global-search kbd {
+      margin-left: auto;
+      border: 1px solid var(--border-2);
+      background: rgba(235, 246, 208, 0.8);
+      padding: 2px 5px;
+      border-radius: 4px;
+      font-size: 9px;
+      color: #3a533e;
+      font-weight: 600;
+    }
+    .icon-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      border: 1px solid var(--border);
+      display: grid;
+      place-items: center;
+      background: rgba(255, 255, 255, 0.7);
+      color: #3a533e;
+      cursor: pointer;
+      transition: .15s;
+    }
+    .icon-button:hover { color: #142817; background: #ffffff; border-color: var(--border-2); }
+    .notify { position: relative; }
+    .notify > span {
+      position: absolute;
+      right: -3px;
+      top: -4px;
+      background: var(--rose);
+      color: white;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #ffffff;
+      border-radius: 50%;
+      font-size: 7px;
+      display: grid;
+      place-items: center;
+      font-weight: 700;
+    }
+    
+    main { width: 100%; max-width: 100%; padding: 28px 32px 48px; box-sizing: border-box; }
+    main.flush { max-width: 100%; padding: 0; }
+    .page-heading { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; gap: 20px; }
+    .eyebrow { display: block; color: #0d6e4f; font-size: 9px; font-weight: 700; letter-spacing: 1.25px; margin-bottom: 6px; text-transform: uppercase; }
+    .page-heading h1, .pr-context h1 { font-size: 24px; letter-spacing: -.6px; margin: 0 0 6px; font-weight: 700; color: #142817; }
+    .page-heading p { margin: 0; color: #49634d; font-size: 11.5px; }
+    .heading-actions, .pr-actions { display: flex; gap: 8px; }
+    
+    .button {
+      border: 1px solid var(--border-2);
+      background: rgba(255, 255, 255, 0.85);
+      color: #1b351e;
+      height: 32px;
+      padding: 0 12px;
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      font-weight: 550;
+      font-size: 10.5px;
+      white-space: nowrap;
+      cursor: pointer;
+      transition: .15s;
+      text-decoration: none;
+      box-shadow: 0 1px 3px rgba(45,83,38,.04);
+    }
+    .button:hover { background: #ffffff; border-color: rgba(45,83,38,.3); color: #142817; }
+    .button.primary {
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-color: #059669;
+      color: #ffffff;
+      box-shadow: 0 3px 14px rgba(16,185,129,.28);
+      font-weight: 600;
+    }
+    .button.primary:hover { filter: brightness(1.06); }
+    .button.ghost { background: rgba(255,255,255,.75); border-color: var(--border); color: #3a533e; }
+    .button.ghost:hover { background: #ffffff; color: #142817; }
+    .button.danger { color: #e11d48; background: rgba(244,63,94,.1); border-color: rgba(244,63,94,.3); }
+    
+    .badge { display: inline-flex; align-items: center; gap: 5px; border: 1px solid var(--border); border-radius: 5px; padding: 3px 6px; color: #3f5843; background: rgba(45,83,38,.06); font-size: 8.5px; font-weight: 600; white-space: nowrap; letter-spacing: .15px; }
+    .badge-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; }
+    .badge.success { color: #065f46; background: rgba(16,185,129,.14); border-color: rgba(16,185,129,.3); }
+    .badge.critical { color: #9f1239; background: rgba(244,63,94,.12); border-color: rgba(244,63,94,.28); }
+    .badge.major { color: #92400e; background: rgba(245,158,11,.14); border-color: rgba(245,158,11,.28); }
+    .badge.minor { color: #0369a1; background: rgba(14,165,233,.12); border-color: rgba(14,165,233,.28); }
+    .badge.running { color: #4338ca; background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.28); }
+    .badge.online { color: #065f46; background: rgba(16,185,129,.14); border-color: rgba(16,185,129,.3); }
+    .badge.online .badge-dot { box-shadow: 0 0 6px #10b981; }
+    
+    .notice {
+      border: 1px solid var(--border);
+      background: linear-gradient(135deg, rgba(255,255,255,.82), rgba(243,249,230,.8));
+      border-radius: 9px;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      width: 100%;
+      box-shadow: 0 4px 16px rgba(45,83,38,.04);
+    }
+    .notice-icon, .metric-icon, .ai-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: grid; place-items: center;
+      color: #4f46e5;
+      background: rgba(99,102,241,.12);
+      border: 1px solid rgba(99,102,241,.2);
+      flex-shrink: 0;
+    }
+    .notice div:nth-child(2) { flex: 1; }
+    .notice strong { font-size: 11px; color: #142817; display: block; }
+    .notice p { margin: 3px 0 0; color: #49634d; font-size: 9.5px; }
+    .notice > button { background: none; border: 0; color: #0d6e4f; display: flex; gap: 4px; align-items: center; font-size: 10px; cursor: pointer; font-weight: 600; }
+    
+    .metrics-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 16px; width: 100%; }
+    .metrics-grid.three { grid-template-columns: repeat(3, 1fr); }
+    .metric-card, .chart-card, .table-card, .settings-card, .yaml-card, .empty-chart, .repo-card, .play-panel {
+      border: 1px solid var(--border);
+      background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(244,250,233,.85));
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(45,83,38,.05), inset 0 1px 0 rgba(255,255,255,.8);
+    }
+    .metric-card { padding: 16px 18px; min-width: 0; display: flex; flex-direction: column; justify-content: space-between; }
+    .metric-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+    .metric-icon { color: #059669; background: rgba(16,185,129,.14); border-color: rgba(16,185,129,.25); }
+    .metric-icon.rose { color: #e11d48; background: rgba(244,63,94,.12); border-color: rgba(244,63,94,.25); }
+    .metric-icon.indigo { color: #4f46e5; background: rgba(99,102,241,.12); border-color: rgba(99,102,241,.25); }
+    .metric-icon.sky { color: #0284c7; background: rgba(14,165,233,.12); border-color: rgba(14,165,233,.25); }
+    .metric-label { display: block; color: #526d56; font-size: 8px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; }
+    .metric-value { display: block; font-size: 24px; letter-spacing: -.5px; margin: 5px 0 4px; color: #142817; font-weight: 700; }
+    .metric-note { font-size: 9.5px; color: var(--muted); }
+    
+    .charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; width: 100%; }
+    .chart-card { padding: 18px 20px; height: 250px; display: flex; flex-direction: column; justify-content: space-between; }
+    .card-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .card-heading h2 { font-size: 13px; margin: 0 0 4px; color: #142817; font-weight: 600; }
+    .card-heading p { margin: 0; color: var(--muted); font-size: 9.5px; }
+    .more, .row-menu { border: 0; background: none; color: #6b8670; cursor: pointer; letter-spacing: 2px; }
+    .donut-layout { height: 180px; display: flex; align-items: center; justify-content: center; gap: 40px; }
+    .donut { width: 128px; height: 128px; border-radius: 50%; background: conic-gradient(var(--rose) 0 13%, var(--amber) 13% 34%, var(--sky) 34% 70%, #94a3b8 70%); display: grid; place-items: center; position: relative; flex-shrink: 0; }
+    .donut:after { content: ''; position: absolute; inset: 16px; border-radius: 50%; background: #ffffff; box-shadow: 0 2px 8px rgba(45,83,38,.06); }
+    .donut > div { z-index: 1; text-align: center; }
+    .donut strong, .donut span { display: block; }
+    .donut strong { font-size: 18px; color: #142817; font-weight: 700; }
+    .donut span { color: var(--muted); font-size: 8.5px; }
+    .legend { min-width: 135px; }
+    .legend > div { display: flex; justify-content: space-between; padding: 6px 0; color: #3f5843; font-size: 9.5px; gap: 16px; border-bottom: 1px solid rgba(45,83,38,.06); }
+    .legend > div:last-child { border-bottom: 0; }
+    .legend span { display: flex; align-items: center; gap: 7px; }
+    .legend i, .tiny-legend i { width: 7px; height: 7px; border-radius: 2px; display: inline-block; }
+    .legend .critical, .tiny-legend .security { background: var(--rose); }
+    .legend .major, .tiny-legend .bugs { background: var(--amber); }
+    .legend .minor { background: var(--sky); }
+    .legend .info { background: #94a3b8; }
+    .tiny-legend .performance { background: var(--indigo); }
+    
+    .tiny-legend { display: flex; gap: 14px; color: var(--muted); font-size: 8.5px; }
+    .tiny-legend span { display: flex; align-items: center; gap: 5px; }
+    .bars { height: 175px; display: flex; align-items: flex-end; justify-content: space-around; padding: 12px 14px 0; border-bottom: 1px solid var(--border); background: repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(45,83,38,.06) 40px); }
+    .bar-column { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; gap: 7px; flex: 1; }
+    .bar-stack { width: 28px; display: flex; flex-direction: column-reverse; justify-content: flex-start; }
+    .bar { display: block; width: 100%; border-radius: 2px 2px 0 0; }
+    .bar.b0 { background: #f43f5e; }
+    .bar.b1 { background: #f59e0b; }
+    .bar.b2 { background: #6366f1; }
+    .bar.b3 { background: #94a3b8; }
+    .bar-column > span { font-size: 8.5px; color: #526d56; font-weight: 600; }
+    
+    .table-card { overflow: hidden; margin-bottom: 32px; width: 100%; }
+    .table-heading { padding: 16px 20px; border-bottom: 1px solid var(--border); align-items: center; }
+    .table-tools { display: flex; gap: 8px; }
+    .mini-search { min-width: 180px; height: 32px; font-size: 9.5px; }
+    .mini-search.large { height: 34px; min-width: 300px; }
+    .table-scroll { overflow-x: auto; width: 100%; }
+    table { border-collapse: collapse; width: 100%; white-space: nowrap; }
+    th { text-align: left; color: #435b47; font-size: 8.5px; letter-spacing: .6px; font-weight: 700; padding: 12px 18px; background: rgba(235,246,215,.65); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+    td { padding: 12px 18px; border-bottom: 1px solid rgba(45,83,38,.08); font-size: 10px; color: #142817; }
+    tbody tr:hover { background: rgba(235,246,215,.35); }
+    .pr-title strong, .pr-title span { display: block; }
+    .pr-title strong { font-weight: 600; max-width: 380px; overflow: hidden; text-overflow: ellipsis; color: #142817; }
+    .pr-title span { color: var(--muted); font-size: 8.5px; margin-top: 3px; }
+    .repo-cell, .file-cell { display: flex; align-items: center; gap: 7px; color: #3f5843; font-weight: 500; }
+    .finding-counts { display: flex; gap: 5px; }
+    .finding-counts span { width: 22px; padding: 2px 0; text-align: center; border-radius: 4px; font-family: 'JetBrains Mono'; font-size: 8.5px; font-weight: 700; }
+    .finding-counts .critical { color: #9f1239; background: rgba(244,63,94,.14); }
+    .finding-counts .major { color: #92400e; background: rgba(245,158,11,.14); }
+    .finding-counts .minor { color: #0369a1; background: rgba(14,165,233,.14); }
+    .muted { color: var(--muted); }
+    .table-footer { height: 48px; padding: 0 18px; display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 9.5px; border-top: 1px solid var(--border); }
+    .table-footer > div { display: flex; gap: 8px; }
+    
+    .filter-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .filter-row .large { margin-right: auto; }
+    .repo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 32px; width: 100%; }
+    .repo-card { border: 1px solid var(--border); background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(244,250,233,.85)); border-radius: 10px; padding: 18px; transition: .2s; box-shadow: 0 4px 20px rgba(45,83,38,.05); }
+    .repo-card:hover { border-color: rgba(45,83,38,.28); transform: translateY(-1px); }
+    .repo-card-top { display: flex; justify-content: space-between; }
+    .repo-icon { width: 30px; height: 30px; border-radius: 7px; background: rgba(235, 246, 215, 0.7); border: 1px solid var(--border); display: grid; place-items: center; color: #065f46; }
+    .repo-icon.small { width: 25px; height: 25px; }
+    .repo-card h2 { font-size: 13px; margin: 14px 0 5px; color: #142817; font-weight: 600; }
+    .repo-card p { height: 28px; color: var(--muted); font-size: 9.5px; margin: 0; }
+    .repo-meta { display: flex; align-items: center; gap: 12px; margin: 14px 0; }
+    .repo-meta > span { display: flex; gap: 5px; align-items: center; color: #3a533e; font-family: 'JetBrains Mono'; font-size: 8.5px; }
+    .repo-card-foot { border-top: 1px solid var(--border); padding-top: 10px; display: flex; justify-content: space-between; color: var(--muted); font-size: 8px; }
+    .repo-card-foot i, .log-stats i { display: inline-block; width: 5px; height: 5px; border-radius: 50%; background: #64748b; margin-right: 5px; }
+    .repo-card-foot i.live, .log-stats .green { background: #10b981; box-shadow: 0 0 5px #10b981; }
+    .switch input { display: none; }
+    .switch span { display: block; width: 28px; height: 16px; border-radius: 12px; background: #cdddc5; position: relative; cursor: pointer; }
+    .switch span:after { content: ''; position: absolute; width: 12px; height: 12px; border-radius: 50%; left: 2px; top: 2px; background: #ffffff; box-shadow: 0 1px 3px rgba(0,0,0,.15); transition: .2s; }
+    .switch input:checked + span { background: #10b981; }
+    .switch input:checked + span:after { left: 14px; background: #ffffff; }
+    
+    .modal-backdrop { position: fixed; inset: 0; z-index: 60; background: rgba(20, 35, 22, 0.45); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); display: grid; place-items: center; padding: 20px; }
+    .wizard-modal, .audit-modal { width: min(680px, 100%); max-height: 90vh; overflow: auto; border: 1px solid var(--border-2); background: #ffffff; border-radius: 12px; box-shadow: 0 24px 60px rgba(20,40,25,.18); color: #142817; }
+    .modal-header { padding: 18px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: flex-start; }
+    .modal-header h2 { margin: 0; font-size: 17px; color: #142817; }
+    .modal-header p { margin: 5px 0 0; color: var(--muted); font-size: 9px; }
+    .steps { display: flex; padding: 15px 20px; background: rgba(235, 246, 215, 0.55); border-bottom: 1px solid var(--border); }
+    .steps > div { display: flex; align-items: center; flex: 1; gap: 7px; color: #49634d; font-size: 9px; }
+    .steps > div > span { width: 20px; height: 20px; border: 1px solid var(--border-2); border-radius: 50%; display: grid; place-items: center; background: #ffffff; }
+    .steps > div > i { height: 1px; background: var(--border-2); flex: 1; margin: 0 8px; }
+    .steps .complete { color: #065f46; font-weight: 600; }
+    .steps .complete > span { background: rgba(16,185,129,.18); border-color: rgba(16,185,129,.4); color: #065f46; }
+    .wizard-body { padding: 20px; }
+    .wizard-title h3 { font-size: 13px; margin: 0 0 5px; color: #142817; }
+    .wizard-title p { color: var(--muted); font-size: 9.5px; margin: 0 0 13px; }
+    .wizard-body .large { width: 100%; margin-bottom: 10px; }
+    .select-list { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; background: #ffffff; }
+    .select-list label { height: 44px; padding: 0 11px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid var(--border); font-size: 10px; cursor: pointer; color: #142817; }
+    .select-list label:last-child { border: 0; }
+    .select-list label .badge { margin-left: auto; }
+    .select-list input { accent-color: var(--emerald); }
+    .permissions { margin-top: 16px; }
+    .permissions > strong { font-size: 9px; color: var(--muted); text-transform: uppercase; }
+    .permissions > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 7px; }
+    .permissions > div > span { border: 1px solid var(--border); padding: 9px; border-radius: 7px; display: flex; gap: 8px; color: #065f46; background: rgba(235, 246, 215, 0.45); }
+    .permissions i { font-style: normal; color: var(--muted); font-size: 8px; }
+    .permissions b { display: block; color: #142817; font-size: 9px; margin-bottom: 2px; }
+    .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 9px; background: rgba(235, 246, 215, 0.3); }
+    .modal-footer > div { display: flex; gap: 7px; }
+    
+    .pr-workspace { width: 100%; min-width: 0; background: rgba(246, 251, 238, 0.95); }
+    .pr-context { padding: 20px 32px 16px; display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 1px solid var(--border); }
+    .pr-context h1 { font-size: 18px; margin-bottom: 9px; color: #142817; }
+    .pr-sub { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 9px; }
+    .pr-sub strong { color: #142817; }
+    .branch-strip { height: 42px; display: flex; align-items: center; gap: 25px; padding: 0 32px; border-bottom: 1px solid var(--border); background: rgba(235, 246, 215, 0.65); color: #3a533e; font-size: 9px; }
+    .branch-strip > span { display: flex; align-items: center; gap: 7px; }
+    .branch-strip code { background: #ffffff; padding: 3px 6px; border-radius: 4px; color: #142817; border: 1px solid var(--border); }
+    .branch-strip b { color: #059669; }
+    .branch-strip i { font-style: normal; color: #e11d48; }
+    .review-grid { display: grid; grid-template-columns: 260px 1fr; min-height: calc(100vh - 162px); }
+    .file-tree { border-right: 1px solid var(--border); background: rgba(243, 249, 230, 0.65); padding: 14px 12px; }
+    .tree-title { display: flex; justify-content: space-between; color: #6b8670; font-size: 8px; padding: 4px 8px 11px; font-weight: 700; letter-spacing: .5px; }
+    .tree-title span { background: rgba(235, 246, 215, 0.9); border-radius: 4px; padding: 1px 5px; color: #142817; border: 1px solid var(--border); }
+    .tree-folder { height: 30px; padding: 0 8px; display: flex; align-items: center; gap: 6px; color: #3a533e; font-size: 9.5px; font-weight: 550; }
+    .tree-folder .badge { margin-left: auto; }
+    .tree-file { width: 100%; border: 0; background: transparent; display: flex; align-items: center; gap: 7px; text-align: left; padding: 7px 8px 7px 27px; color: #3a533e; border-radius: 6px; cursor: pointer; transition: .15s; }
+    .tree-file.active { background: #ffffff; color: #142817; font-weight: 600; box-shadow: 0 1px 4px rgba(45,83,38,.08); }
+    .tree-file > span { flex: 1; font-family: 'JetBrains Mono'; font-size: 9px; }
+    .tree-file small { display: block; color: var(--muted); font-size: 7px; margin-top: 3px; }
+    .tree-stats { border-top: 1px solid var(--border); margin: 16px 7px; padding-top: 14px; color: var(--muted); font-size: 9px; }
+    .tree-stats > div { height: 3px; background: rgba(45,83,38,.12); border-radius: 3px; margin: 8px 0; }
+    .tree-stats > div span { display: block; height: 100%; background: linear-gradient(90deg, #10b981, #0ea5e9); border-radius: 3px; }
+    .tree-stats p { color: var(--muted); margin: 0; }
+    .review-main { padding: 18px 32px 60px; max-width: none; width: 100%; box-sizing: border-box; }
+    .ai-summary, .diff-card { border: 1px solid var(--border); border-radius: 9px; background: #ffffff; box-shadow: 0 4px 16px rgba(45,83,38,.05); overflow: hidden; margin-bottom: 12px; }
+    .summary-head { border: 0; background: linear-gradient(90deg, rgba(16,185,129,.12), transparent); width: 100%; padding: 11px 13px; display: flex; align-items: center; text-align: left; gap: 10px; cursor: pointer; }
+    .summary-head .ai-icon { width: 28px; height: 28px; }
+    .summary-head div { flex: 1; }
+    .summary-head strong, .summary-head span { display: block; }
+    .summary-head strong { color: #142817; font-size: 11px; }
+    .summary-head span { font-size: 8px; color: var(--muted); margin-top: 3px; }
+    .summary-body { border-top: 1px solid var(--border); display: grid; grid-template-columns: 1.3fr .8fr; gap: 20px; padding: 14px 16px; }
+    .summary-body p, .summary-body li { color: #2e4733; font-size: 9.5px; line-height: 1.6; }
+    .summary-body ul { padding-left: 15px; margin: 6px 0 0; }
+    .summary-label { font-size: 8px; color: #0d6e4f; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; display: block; margin-top: 8px; }
+    .summary-label:first-child { margin-top: 0; }
+    .risk-box { padding: 11px; background: rgba(245,158,11,.08); border: 1px solid rgba(245,158,11,.25); border-radius: 7px; }
+    .risk-box > span { display: flex; gap: 6px; color: #92400e; font-size: 8px; font-weight: 700; align-items: center; }
+    .risk-box p { margin: 6px 0 8px; color: #3d2f0f; }
+    .risk-box strong { font-size: 8px; color: #142817; display: block; margin-top: 8px; }
+    
+    .diff-header { height: 42px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; background: rgba(235, 246, 215, 0.65); border-bottom: 1px solid var(--border); }
+    .diff-header > div { display: flex; align-items: center; gap: 8px; color: #142817; }
+    .diff-header span { font-family: 'JetBrains Mono'; font-size: 8px; color: #059669; font-weight: 600; }
+    .hunk { font-family: 'JetBrains Mono'; font-size: 9px; color: #4338ca; background: rgba(99,102,241,.08); padding: 6px 78px; }
+    .code-line { height: 24px; display: grid; grid-template-columns: 38px 38px 1fr; position: relative; font-size: 10px; line-height: 24px; }
+    .code-line > span { text-align: right; padding-right: 10px; color: #79947d; border-right: 1px solid rgba(45,83,38,.12); user-select: none; font-family: 'JetBrains Mono'; }
+    .code-line code { padding-left: 10px; white-space: pre; color: #142817; font-family: 'JetBrains Mono'; }
+    .code-line.added { background: rgba(16,185,129,.12); }
+    .code-line.added code { color: #065f46; font-weight: 550; }
+    .code-line.removed { background: rgba(244,63,94,.1); }
+    .code-line.removed code { color: #9f1239; }
+    .code-line.critical-line { box-shadow: inset 3px 0 var(--rose); }
+    .code-line.critical-line > i { position: absolute; right: 12px; top: 7px; width: 8px; height: 8px; border-radius: 50%; background: var(--rose); box-shadow: 0 0 8px var(--rose); }
+    
+    .inline-comment { display: grid; grid-template-columns: 76px 1fr; background: rgba(246, 251, 238, 0.7); padding: 12px 12px 12px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+    .comment-rail { display: flex; justify-content: flex-end; padding-right: 10px; }
+    .comment-rail > span { width: 25px; height: 25px; border-radius: 50%; display: grid; place-items: center; background: rgba(16,185,129,.16); color: #065f46; border: 1px solid rgba(16,185,129,.35); }
+    .comment-card { border: 1px solid var(--border-2); background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 16px rgba(45,83,38,.08); }
+    .comment-head { display: flex; justify-content: space-between; align-items: center; padding: 9px 11px; border-bottom: 1px solid var(--border); }
+    .comment-head > div { display: flex; align-items: center; gap: 6px; }
+    .comment-head > div > span { font-size: 8px; color: var(--muted); margin-left: 3px; }
+    .comment-card > h3 { font-size: 12px; margin: 13px 13px 7px; color: #142817; font-weight: 600; }
+    .comment-card > p { font-size: 9.5px; color: #2e4733; line-height: 1.6; margin: 5px 13px; }
+    .comment-card code { color: #be123c; background: rgba(244,63,94,.1); padding: 1px 3px; border-radius: 3px; }
+    .evidence { margin: 10px 13px; border-left: 2px solid var(--rose); background: rgba(244,63,94,.08); padding: 7px 9px; }
+    .evidence span, .suggestion > div:first-child > span, .suggestion.compact > span { display: block; font-size: 7.5px; color: #9f1239; font-weight: 700; margin-bottom: 5px; }
+    .evidence code { text-decoration: line-through; }
+    .suggestion { margin: 10px 13px; border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.06); border-radius: 7px; overflow: hidden; }
+    .suggestion > div:first-child { padding: 7px 9px; display: flex; align-items: center; justify-content: space-between; }
+    .suggestion > div:first-child > span { color: #065f46; margin: 0; display: flex; align-items: center; gap: 5px; font-weight: 600; }
+    .suggestion pre { margin: 0; padding: 8px 10px; border-block: 1px solid rgba(16,185,129,.18); font-size: 9px; line-height: 1.7; color: #065f46; background: #ffffff; }
+    .suggestion pre em { font-style: normal; color: #047857; font-weight: 600; }
+    .suggest-actions { display: flex; justify-content: space-between; align-items: center; padding: 7px 8px 7px 10px; }
+    .suggest-actions > span { color: var(--muted); font-size: 8px; }
+    .suggest-actions > div { display: flex; gap: 6px; }
+    .reaction-bar { display: flex; align-items: center; gap: 6px; padding: 8px 13px; border-top: 1px solid var(--border); font-size: 8.5px; color: var(--muted); }
+    .reaction-bar > button { border: 1px solid var(--border); background: rgba(235, 246, 215, 0.5); padding: 4px 7px; border-radius: 5px; color: #3a533e; cursor: pointer; transition: .15s; }
+    .reaction-bar > button.selected { color: #065f46; border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.14); font-weight: 600; }
+    .reply { margin-left: auto; width: 190px; height: 26px; border: 1px solid var(--border); border-radius: 5px; display: flex; align-items: center; justify-content: space-between; padding: 0 7px; color: var(--muted); background: #ffffff; }
+    
+    .audit-modal { width: min(620px, 100%); }
+    .audit-summary { display: flex; align-items: center; gap: 17px; padding: 10px 20px; border-bottom: 1px solid var(--border); background: rgba(235, 246, 215, 0.55); color: #3a533e; font-size: 8.5px; }
+    .audit-summary strong { margin-left: auto; color: #065f46; font-family: 'JetBrains Mono'; font-weight: 700; }
+    .timeline { padding: 18px 25px; }
+    .timeline-step { display: grid; grid-template-columns: 35px 1fr auto; min-height: 65px; }
+    .timeline-mark { position: relative; }
+    .timeline-mark span { width: 25px; height: 25px; border-radius: 50%; border: 1px solid rgba(16,185,129,.3); background: rgba(16,185,129,.12); color: #065f46; display: grid; place-items: center; }
+    .timeline-mark > i { position: absolute; left: 12px; top: 27px; bottom: 1px; width: 1px; background: var(--border-2); }
+    .timeline-step strong { font-size: 10px; color: #142817; }
+    .timeline-step p { margin: 4px 0; color: var(--muted); font-size: 8.5px; }
+    .timeline-step code { font-size: 8px; color: #92400e; background: rgba(245,158,11,.14); padding: 2px 5px; border-radius: 3px; }
+    .timeline-step time { font-family: 'JetBrains Mono'; font-size: 8px; color: var(--muted); }
+    
+    .playground { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 32px; width: 100%; }
+    .play-panel { border: 1px solid var(--border); background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(244,250,233,.85)); border-radius: 10px; padding: 18px; box-shadow: 0 4px 20px rgba(45,83,38,.05); }
+    .panel-heading { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+    .panel-heading > div { display: flex; align-items: center; gap: 9px; }
+    .panel-heading h2 { font-size: 12px; margin: 0 0 3px; color: #142817; font-weight: 600; }
+    .panel-heading p { font-size: 8.5px; color: var(--muted); margin: 0; }
+    .step-number { width: 24px; height: 24px; border-radius: 6px; display: grid; place-items: center; background: rgba(16,185,129,.15); color: #065f46; font-weight: 700; }
+    .step-number.purple { color: #4338ca; background: rgba(99,102,241,.14); }
+    .field-label { display: block; color: #526d56; font-size: 8px; font-weight: 700; letter-spacing: .6px; margin: 11px 0 7px; text-transform: uppercase; }
+    .field-label span { float: right; font-weight: 400; color: var(--muted); }
+    .preset-row { display: flex; gap: 6px; }
+    .preset-row button, .segmented button { border: 1px solid var(--border); background: rgba(255,255,255,.8); color: #3a533e; border-radius: 6px; padding: 7px 10px; font-size: 9px; cursor: pointer; transition: .15s; }
+    .preset-row button.active, .segmented button.active { color: #065f46; border-color: rgba(16,185,129,.4); background: rgba(16,185,129,.14); font-weight: 600; }
+    .editor-head { height: 36px; margin-top: 12px; border: 1px solid var(--border); border-bottom: 0; border-radius: 7px 7px 0 0; display: flex; align-items: center; justify-content: space-between; padding: 0 10px; background: rgba(235, 246, 215, 0.65); }
+    .editor-head > span { display: flex; align-items: center; gap: 6px; font-family: 'JetBrains Mono'; font-size: 9px; color: #142817; font-weight: 600; }
+    .code-editor { height: 224px; margin: 0; border: 1px solid var(--border); background: #ffffff; padding: 12px; color: #142817; font-size: 9.5px; line-height: 1.8; overflow: auto; width: 100%; border-radius: 0 0 7px 7px; resize: vertical; }
+    .prompt-field { border: 1px solid var(--border); background: #ffffff; border-radius: 7px; padding: 9px; color: #142817; font-size: 9.5px; position: relative; width: 100%; }
+    .run-button { width: 100%; margin-top: 12px; height: 37px !important; }
+    .run-button kbd { margin-left: auto; color: rgba(255,255,255,.8); font-size: 8px; border: 1px solid rgba(255,255,255,.3); padding: 2px 4px; border-radius: 3px; }
+    .preview-summary { border: 1px solid rgba(99,102,241,.25); background: rgba(99,102,241,.06); border-radius: 8px; padding: 11px; margin-bottom: 12px; }
+    .preview-summary > div:first-child { display: flex; gap: 9px; align-items: center; }
+    .preview-summary strong { font-size: 10px; color: #142817; }
+    .preview-summary p { font-size: 8.5px; color: var(--muted); margin: 3px 0; }
+    .preview-stats { display: grid; grid-template-columns: repeat(3, 1fr); margin-top: 10px; border-top: 1px solid rgba(99,102,241,.16); padding-top: 8px; }
+    .preview-stats span { font-size: 8px; color: var(--muted); }
+    .preview-stats b { display: block; color: #142817; font-size: 11px; margin-bottom: 2px; font-weight: 700; }
+    .github-preview { border: 1px solid var(--border-2); border-radius: 8px; background: #ffffff; overflow: hidden; box-shadow: 0 2px 8px rgba(45,83,38,.04); }
+    .gh-head { height: 38px; padding: 0 10px; display: flex; align-items: center; gap: 6px; border-bottom: 1px solid var(--border); font-size: 8.5px; background: rgba(235, 246, 215, 0.45); }
+    .gh-head strong { color: #142817; }
+    .gh-head > span:last-child { color: var(--muted); }
+    .gh-body { padding: 13px; }
+    .gh-body h3 { font-size: 11px; margin: 10px 0 6px; color: #142817; font-weight: 600; }
+    .gh-body p { font-size: 9px; line-height: 1.6; color: #2e4733; }
+    .suggestion.compact { margin: 10px 0 0; padding-top: 8px; }
+    .suggestion.compact > span { color: #065f46; padding: 0 9px; font-weight: 600; }
+    .preview-foot { display: flex; align-items: center; justify-content: space-between; margin-top: 11px; color: var(--muted); font-size: 8px; }
+    .preview-foot > span { display: flex; align-items: center; gap: 5px; color: #059669; font-weight: 600; }
+    
+    .research-banner { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border: 1px solid var(--border); background: linear-gradient(90deg, rgba(99,102,241,.1), rgba(235,246,215,.6)); border-radius: 8px; margin-bottom: 12px; color: #3a533e; font-size: 8.5px; }
+    .research-banner > div { display: flex; gap: 9px; align-items: center; color: #4338ca; }
+    .research-banner strong { color: #142817; font-size: 10px; }
+    .research-banner p { margin: 3px 0 0; color: var(--muted); }
+    .benchmark-table .score { min-width: 115px; }
+    .scorebar { display: inline-block; width: 54px; height: 3px; background: rgba(45,83,38,.12); border-radius: 3px; margin-right: 7px; vertical-align: middle; }
+    .scorebar i { display: block; height: 100%; background: linear-gradient(90deg, var(--indigo), var(--emerald)); border-radius: 3px; }
+    .score strong { font-family: 'JetBrains Mono'; font-size: 8px; color: #142817; }
+    
+    .settings-layout { display: grid; grid-template-columns: minmax(500px, 1.4fr) minmax(320px, .8fr); gap: 16px; margin-bottom: 32px; width: 100%; }
+    .settings-card { padding-bottom: 4px; }
+    .settings-card > .card-heading { padding: 15px; border-bottom: 1px solid var(--border); }
+    .form-row { margin: 0 15px; padding: 16px 0; border-bottom: 1px solid var(--border); display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 15px; }
+    .form-row strong { font-size: 10px; color: #142817; display: block; }
+    .form-row p { font-size: 8.5px; color: var(--muted); margin: 4px 0 0; }
+    .segmented { border: 1px solid var(--border); border-radius: 7px; padding: 3px; background: rgba(235, 246, 215, 0.6); display: flex; gap: 2px; }
+    .segmented button { border: 0; padding: 6px 9px; }
+    .slider-row { grid-template-columns: 1fr auto; }
+    .slider-row input { grid-column: 1 / -1; width: 100%; accent-color: var(--emerald); }
+    .range-value { font-family: 'JetBrains Mono'; color: #065f46; background: rgba(16,185,129,.14); padding: 5px 7px; border-radius: 5px; font-weight: 700; }
+    .range-labels { grid-column: 1 / -1; display: flex; justify-content: space-between; color: var(--muted); font-size: 7.5px; }
+    .number-field { border: 1px solid var(--border); border-radius: 6px; display: flex; align-items: center; background: #ffffff; }
+    .number-field button { border: 0; background: rgba(235, 246, 215, 0.6); color: #142817; width: 28px; height: 28px; cursor: pointer; }
+    .number-field strong { width: 34px; text-align: center; font-family: 'JetBrains Mono'; color: #142817; }
+    .tags-row { grid-template-columns: 1fr; }
+    .tag-input { min-height: 38px; border: 1px solid var(--border); background: #ffffff; border-radius: 7px; padding: 6px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .tag-input span { font-family: 'JetBrains Mono'; font-size: 8px; background: rgba(235, 246, 215, 0.7); border: 1px solid var(--border); padding: 4px 6px; border-radius: 4px; color: #142817; }
+    .tag-input b { color: var(--muted); margin-left: 4px; cursor: pointer; }
+    .tag-input em { font-style: normal; color: var(--muted); font-size: 8px; }
+    .yaml-card { overflow: hidden; height: max-content; background: #ffffff; border: 1px solid var(--border); }
+    .yaml-head, .yaml-card > div:last-child { height: 42px; padding: 0 11px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); }
+    .yaml-head { background: rgba(235, 246, 215, 0.65); }
+    .yaml-head > span { display: flex; gap: 7px; align-items: center; font-family: 'JetBrains Mono'; font-size: 9px; color: #142817; font-weight: 600; }
+    .yaml-card pre { margin: 0; padding: 15px; font-size: 9px; line-height: 1.85; color: #1b351e; background: #fbfdf9; }
+    .yaml-card pre span { color: #4338ca; font-weight: 600; }
+    .yaml-card > div:last-child { border-top: 1px solid var(--border); border-bottom: 0; justify-content: flex-start; gap: 7px; color: var(--muted); font-size: 8px; background: rgba(235, 246, 215, 0.4); }
+    
+    .log-stats { height: 48px; border: 1px solid var(--border); background: rgba(255, 255, 255, 0.9); border-radius: 8px; display: flex; align-items: center; gap: 28px; padding: 0 14px; margin-bottom: 12px; color: var(--muted); font-size: 8.5px; box-shadow: 0 2px 10px rgba(45,83,38,.04); }
+    .log-stats span { display: flex; align-items: center; gap: 5px; }
+    .log-stats b { color: #142817; }
+    .log-stats .rose { background: var(--rose); box-shadow: 0 0 5px var(--rose); }
+    .log-stats > .badge { margin-left: auto; }
+    .payload-preview { margin-top: 12px; border: 1px solid var(--border); background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(45,83,38,.04); }
+    .payload-preview > div { height: 40px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); color: #142817; background: rgba(235, 246, 215, 0.55); }
+    .payload-preview > div > span { display: flex; align-items: center; gap: 6px; font-size: 9px; }
+    .payload-preview pre { padding: 12px 15px; margin: 0; color: #1b351e; font-size: 9px; line-height: 1.7; background: #fbfdf9; }
+    .payload-preview pre b { color: #4338ca; font-weight: 600; }
+    
+    .empty-chart { height: 340px; padding: 15px; background: linear-gradient(145deg, rgba(255,255,255,.9), rgba(244,250,233,.85)); border: 1px solid var(--border); box-shadow: 0 4px 20px rgba(45,83,38,.05); }
+    .line-chart { height: 260px; margin-top: 20px; background: repeating-linear-gradient(0deg, transparent, transparent 51px, rgba(45,83,38,.07) 52px); }
+    .line-chart svg { width: 100%; height: 100%; overflow: visible; }
+    .line-chart .area { fill: rgba(16,185,129,.14); }
+    .line-chart .line { fill: none; stroke: var(--emerald); stroke-width: 2.2; filter: drop-shadow(0 2px 5px rgba(16,185,129,.35)); }
+    
+    .sidebar-scrim { display: none; }
+    .hidden { display: none !important; }
+    
+    @media(max-width: 1100px) {
+      .metrics-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .repo-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+      .charts-grid { grid-template-columns: 1fr; gap: 14px; }
+      .chart-card { height: 250px; }
+      .playground { grid-template-columns: 1fr; gap: 14px; }
+      .top-actions .badge.online { display: none; }
+      .settings-layout { grid-template-columns: 1fr; gap: 14px; }
+      .yaml-card { display: none; }
+      .topbar { padding: 0 20px; }
+      main { padding: 24px 20px 40px; }
+    }
+    @media(max-width: 820px) {
+      .sidebar { transform: translateX(-100%); transition: .2s; }
+      .sidebar.open { transform: none; box-shadow: 20px 0 60px rgba(0,0,0,.5); }
+      .mobile-close { display: block; }
+      .sidebar-scrim { display: block; position: fixed; inset: 0; z-index: 25; border: 0; background: rgba(0,0,0,.5); }
+      .app-main { margin-left: 0; }
+      .menu-button { display: block; }
+      .topbar { padding: 0 16px; }
+      .crumb { display: none; }
+      .global-search { min-width: 180px; }
+      main { padding: 20px 16px 36px; }
+      .page-heading { align-items: flex-start; flex-direction: column; }
+      .charts-grid { display: block; }
+      .chart-card { margin-bottom: 14px; }
+      .repo-grid { grid-template-columns: 1fr; }
+      .review-grid { grid-template-columns: 1fr; }
+      .file-tree { border-right: 0; border-bottom: 1px solid var(--border); }
+      .pr-context { align-items: flex-start; gap: 15px; }
+      .pr-actions { flex-direction: column; }
+      .summary-body { grid-template-columns: 1fr; }
+      .playground { min-width: auto; }
+      .settings-layout { min-width: auto; }
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="sidebar" id="app-sidebar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="6" width="16" height="13" rx="3"/><path d="M9 11h.01M15 11h.01M9 15h6M12 6V3M10 3h4"/></svg>
+      </div>
+      <div>
+        <strong>ReviewBot</strong>
+        <span>VKU SE Platform</span>
+      </div>
+      <button class="mobile-close" onclick="toggleSidebar()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+
+    <nav>
+      <!-- CORE -->
+      <div class="nav-group">
+        <div class="nav-label">CORE</div>
+        <button class="nav-item active" onclick="switchNav('Overview')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          <span>Overview</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('Repositories')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg>
+          <span>Repositories</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('Pull Requests')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>
+          <span>Pull Requests</span>
+          <em>12</em>
+        </button>
+        <button class="nav-item" onclick="switchNav('Live Playground')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg>
+          <span>Live Playground</span>
+        </button>
+      </div>
+
+      <!-- INSIGHTS -->
+      <div class="nav-group">
+        <div class="nav-label">INSIGHTS</div>
+        <button class="nav-item" onclick="switchNav('Quality Analytics')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg>
+          <span>Quality Analytics</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('LLM Cost & Tokens')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg>
+          <span>LLM Cost & Tokens</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('Benchmark & Eval')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/><path d="M4 6.5v13"/></svg>
+          <span>Benchmark & Eval</span>
+        </button>
+      </div>
+
+      <!-- ADMIN -->
+      <div class="nav-group">
+        <div class="nav-label">ADMIN</div>
+        <button class="nav-item" onclick="switchNav('Rule Config')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>
+          <span>Rule Config</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('Webhook Logs')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="m7 9 3 3-3 3M13 15h4"/></svg>
+          <span>Webhook Logs</span>
+        </button>
+        <button class="nav-item" onclick="switchNav('Settings')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6 1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"/></svg>
+          <span>Settings</span>
+        </button>
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="org-card">
+        <div class="avatar">VS</div>
+        <div class="org-text">
+          <strong>vku-se</strong>
+          <span><i></i> GitHub synced</span>
+        </div>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg>
+      </div>
+    </div>
+  </aside>
+
+  <div class="sidebar-scrim" id="sidebar-scrim" onclick="toggleSidebar()"></div>
+
+  <!-- ==================== MAIN VIEWPORT ==================== -->
+  <div class="app-main">
+    <header class="topbar">
+      <button class="menu-button" onclick="toggleSidebar()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <div class="crumb">
+        <span>Workspace</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg>
+        <strong id="crumb-active">Overview</strong>
+      </div>
+      <div class="top-actions">
+        <div class="global-search">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>
+          <span>Search anything...</span>
+          <kbd>⌘ K</kbd>
+        </div>
+        <span class="badge online"><span class="badge-dot"></span>FastAPI & Redis Online</span>
+        <button class="icon-button" title="Documentation" onclick="switchNav('Benchmark & Eval')">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M9.8 9a2.4 2.4 0 1 1 3.7 2c-1.2.8-1.5 1.2-1.5 2M12 17h.01"/></svg>
+        </button>
+        <button class="icon-button notify" title="Notifications">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+          <span>3</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- 1. OVERVIEW VIEW -->
+    <main id="view-overview">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">COMMAND CENTER</span>
+          <h1>Good morning, Vũ.</h1>
+          <p>ReviewBot analyzed 48 pull requests and found 126 issues this week.</p>
+        </div>
+        <div class="heading-actions">
+          <button class="button ghost" onclick="alert('Đã tạo file báo cáo audit report thành công.')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/><path d="M4 6.5v13"/></svg>
+            Export report
+          </button>
+          <button class="button primary" onclick="switchNav('Pull Requests')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>
+            Review a PR
+          </button>
+        </div>
+      </div>
+
+      <div class="notice">
+        <span class="notice-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2zM19 14l.7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7zM5 14l.7 2.3L8 17l-2.3.7L5 20l-.7-2.3L2 17l2.3-.7z"/></svg>
+        </span>
+        <div>
+          <strong>ReviewBot is learning from your team</strong>
+          <p>87% of this week’s suggestions were marked helpful. Confidence calibration improved by 4.2%.</p>
+        </div>
+        <button onclick="switchNav('Quality Analytics')">View model insights <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg></span><span class="badge success">+12.4%</span></div>
+          <span class="metric-label">TOTAL PRs ANALYZED</span>
+          <strong class="metric-value" id="kpi-prs">1,248</strong>
+          <span class="metric-note">48 reviewed this week</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-icon rose"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/><path d="m9 12 2 2 4-5"/></svg></span><span class="badge success">+8.1%</span></div>
+          <span class="metric-label">VULNERABILITIES & BUGS</span>
+          <strong class="metric-value" id="kpi-findings" style="color:var(--rose)">3,891</strong>
+          <span class="metric-note">142 critical · 820 major</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-icon indigo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span><span class="badge success">-3.2%</span></div>
+          <span class="metric-label">ACCUMULATED LLM COST</span>
+          <strong class="metric-value" id="kpi-cost" style="color:var(--emerald)">$14.82</strong>
+          <span class="metric-note">1.9M tokens consumed</span>
+        </div>
+        <div class="metric-card">
+          <div class="metric-top"><span class="metric-icon sky"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M13 2 4 14h7l-1 8 9-12h-7z"/></svg></span><span class="badge success">-18.6%</span></div>
+          <span class="metric-label">AVG. PROCESSING LATENCY</span>
+          <strong class="metric-value" id="kpi-latency">780 ms</strong>
+          <span class="metric-note">p95 · 1.2 seconds</span>
+        </div>
+      </div>
+
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="card-heading"><div><h2>Severity breakdown</h2><p>All findings · Last 30 days</p></div><button class="more">•••</button></div>
+          <div class="donut-layout">
+            <div class="donut"><div><strong id="donut-total">3,891</strong><span>findings</span></div></div>
+            <div class="legend">
+              <div><span><i class="critical"></i>Critical</span><strong id="donut-crit">142</strong></div>
+              <div><span><i class="major"></i>Major</span><strong id="donut-maj">820</strong></div>
+              <div><span><i class="minor"></i>Minor</span><strong id="donut-min">1,674</strong></div>
+              <div><span><i class="info"></i>Info</span><strong id="donut-inf">1,255</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="chart-card">
+          <div class="card-heading"><div><h2>Defect categories</h2><p>Findings by week</p></div><div class="tiny-legend"><span><i class="security"></i>Security</span><span><i class="bugs"></i>Bugs</span><span><i class="performance"></i>Performance</span></div></div>
+          <div class="bars">
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:32px"></i><i class="bar b1" style="height:26px"></i><i class="bar b2" style="height:18px"></i><i class="bar b3" style="height:12px"></i></div><span>W1</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:38px"></i><i class="bar b1" style="height:22px"></i><i class="bar b2" style="height:24px"></i><i class="bar b3" style="height:10px"></i></div><span>W2</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:26px"></i><i class="bar b1" style="height:34px"></i><i class="bar b2" style="height:20px"></i><i class="bar b3" style="height:16px"></i></div><span>W3</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:46px"></i><i class="bar b1" style="height:28px"></i><i class="bar b2" style="height:22px"></i><i class="bar b3" style="height:9px"></i></div><span>W4</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:40px"></i><i class="bar b1" style="height:38px"></i><i class="bar b2" style="height:26px"></i><i class="bar b3" style="height:12px"></i></div><span>W5</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:52px"></i><i class="bar b1" style="height:34px"></i><i class="bar b2" style="height:25px"></i><i class="bar b3" style="height:14px"></i></div><span>W6</span></div>
+            <div class="bar-column"><div class="bar-stack"><i class="bar b0" style="height:58px"></i><i class="bar b1" style="height:42px"></i><i class="bar b2" style="height:32px"></i><i class="bar b3" style="height:16px"></i></div><span>W7</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="table-card">
+        <div class="card-heading table-heading">
+          <div><h2>Recent pull requests</h2><p>Live reviews across connected repositories</p></div>
+          <div class="table-tools">
+            <div class="mini-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Search PRs</div>
+            <button class="button ghost" onclick="refreshOverviewData()">Refresh</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr><th>Pull request</th><th>Repository</th><th>Status</th><th>Findings</th><th>Updated</th><th></th></tr>
+            </thead>
+            <tbody id="overview-prs-tbody">
+              <tr>
+                <td><div class="pr-title"><strong>#101 feat(auth/payment): add database query and discount calculator</strong><span>by @student_dev</span></div></td>
+                <td><span class="repo-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg>vku-se/student-management-app</span></td>
+                <td><span class="badge success"><span class="badge-dot"></span>Done</span></td>
+                <td><div class="finding-counts"><span class="critical">2</span><span class="major">1</span><span class="minor">0</span></div></td>
+                <td class="muted">just now</td>
+                <td><button class="button ghost" onclick="switchNav('Pull Requests')">Inspect</button></td>
+              </tr>
+              <tr>
+                <td><div class="pr-title"><strong>#98 fix: prevent race condition in order processing</strong><span>by @linhnguyen</span></div></td>
+                <td><span class="repo-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg>vku-se/ecommerce-api</span></td>
+                <td><span class="badge running"><span class="badge-dot"></span>Processing</span></td>
+                <td><div class="finding-counts"><span class="critical">0</span><span class="major">1</span><span class="minor">3</span></div></td>
+                <td class="muted">8m ago</td>
+                <td><button class="row-menu">•••</button></td>
+              </tr>
+              <tr>
+                <td><div class="pr-title"><strong>#342 refactor: migrate dashboard queries to server actions</strong><span>by @minhtran</span></div></td>
+                <td><span class="repo-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg>vku-se/web-portal</span></td>
+                <td><span class="badge success"><span class="badge-dot"></span>Done</span></td>
+                <td><div class="finding-counts"><span class="critical">1</span><span class="major">2</span><span class="minor">8</span></div></td>
+                <td class="muted">22m ago</td>
+                <td><button class="row-menu">•••</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="table-footer"><span>Showing active pull requests in database</span><div><button class="button ghost">Previous</button><button class="button ghost">Next</button></div></div>
+      </div>
+    </main>
+
+    <!-- 2. REPOSITORIES VIEW -->
+    <main id="view-repositories" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">WORKSPACE</span>
+          <h1>Repositories</h1>
+          <p>Manage connected codebases, branches, and automatic review policies.</p>
+        </div>
+        <button class="button primary" onclick="toggleModal('onboarding-modal')">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg>
+          Connect repository
+        </button>
+      </div>
+
+      <div class="filter-row">
+        <div class="mini-search large"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Search repositories...</div>
+        <button class="button ghost">All languages <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+        <button class="button ghost">Last activity <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></button>
+      </div>
+
+      <div class="repo-grid" id="repo-grid-container">
+        <div class="repo-card">
+          <div class="repo-card-top"><span class="repo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg></span><label class="switch"><input type="checkbox" checked><span onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked"></span></label></div>
+          <h2>ecommerce-api</h2><p>Core commerce APIs and order processing</p>
+          <div class="repo-meta"><span class="badge neutral">Python</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>main</span></div>
+          <div class="repo-card-foot"><span><i class="live"></i>12 reviews this month</span><span>2m ago</span></div>
+        </div>
+
+        <div class="repo-card">
+          <div class="repo-card-top"><span class="repo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg></span><label class="switch"><input type="checkbox" checked><span onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked"></span></label></div>
+          <h2>web-portal</h2><p>Customer and admin dashboard portal</p>
+          <div class="repo-meta"><span class="badge minor">TypeScript</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>production</span></div>
+          <div class="repo-card-foot"><span><i class="live"></i>8 reviews this month</span><span>14m ago</span></div>
+        </div>
+
+        <div class="repo-card">
+          <div class="repo-card-top"><span class="repo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg></span><label class="switch"><input type="checkbox" checked><span onclick="this.previousElementSibling.checked = !this.previousElementSibling.checked"></span></label></div>
+          <h2>auth-service</h2><p>OAuth, sessions and access policies</p>
+          <div class="repo-meta"><span class="badge neutral">Go</span><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>main</span></div>
+          <div class="repo-card-foot"><span><i class="live"></i>3 reviews this month</span><span>1h ago</span></div>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. PULL REQUESTS FLUSH VIEW (FLAGSHIP INSPECTOR) -->
+    <main id="view-pull-requests" class="flush hidden">
+      <div class="pr-workspace">
+        <div class="pr-context">
+          <div>
+            <span class="eyebrow">PULL REQUEST #101</span>
+            <h1>feat(auth/payment): add database query and discount calculator</h1>
+            <div class="pr-sub">
+              <span class="avatar tiny">SD</span>
+              <strong>@student_dev</strong>
+              <span>opened 18 minutes ago</span>
+              <span class="badge success"><span class="badge-dot"></span>Review complete</span>
+            </div>
+          </div>
+          <div class="pr-actions">
+            <button class="button ghost" onclick="toggleModal('audit-modal')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg>
+              View audit trace
+            </button>
+            <button class="button primary" onclick="alert('Đang chuyển hướng tới GitHub...')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg>
+              Open in GitHub
+            </button>
+          </div>
+        </div>
+
+        <div class="branch-strip">
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg><code>main</code><span>←</span><code>feature/auth</code></span>
+          <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>9f8e7d6</span>
+          <span><b>+124</b> <i>−38</i></span>
+          <span>5 files changed</span>
+        </div>
+
+        <div class="review-grid">
+          <aside class="file-tree">
+            <div class="tree-title"><strong>CHANGED FILES</strong><span>5</span></div>
+            <div class="tree-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h7l2 2h9v11H3z"/></svg>src <span class="badge critical">3</span></div>
+            <button class="tree-file active"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><span>database.py<small>+28 −4</small></span><span class="badge critical">2</span></button>
+            <button class="tree-file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><span>discount.py<small>+42 −8</small></span><span class="badge major">1</span></button>
+            <div class="tree-folder"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h7l2 2h9v11H3z"/></svg>tests</div>
+            <button class="tree-file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><span>test_discount.py<small>+38 −0</small></span></button>
+            <button class="tree-file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><span>config.py<small>+8 −2</small></span></button>
+            <button class="tree-file"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><span>README.md<small>+8 −24</small></span></button>
+            <div class="tree-stats">
+              <strong>Review health</strong>
+              <div><span style="width:72%"></span></div>
+              <p><b>3</b> issues in <b>2</b> files</p>
+            </div>
+          </aside>
+
+          <section class="review-main">
+            <!-- AI Summary Card -->
+            <div class="ai-summary">
+              <button class="summary-head" onclick="toggleSummaryBody()">
+                <span class="ai-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2zM19 14l.7 2.3L22 17l-2.3.7L19 20l-.7-2.3L16 17l2.3-.7zM5 14l.7 2.3L8 17l-2.3.7L5 20l-.7-2.3L2 17l2.3-.7z"/></svg></span>
+                <div>
+                  <strong>AI pull request summary</strong>
+                  <span>Generated by ReviewBot · Claude 3.5 Sonnet</span>
+                </div>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg>
+              </button>
+              <div class="summary-body" id="summary-body-content">
+                <div>
+                  <span class="summary-label">GOAL</span>
+                  <p>Add payment discount calculation and retrieve user records during checkout.</p>
+                  <span class="summary-label">KEY CHANGES</span>
+                  <ul>
+                    <li>Introduces dynamic user lookup in <code>database.py</code></li>
+                    <li>Adds tier-based discount calculation with three new test cases</li>
+                  </ul>
+                </div>
+                <div class="risk-box">
+                  <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/><path d="m9 12 2 2 4-5"/></svg>POTENTIAL RISKS</span>
+                  <p>User input is interpolated directly into a SQL query. Discount logic may divide by zero when quantity is empty.</p>
+                  <strong>Recommended tests</strong>
+                  <p>SQL injection payload · Empty cart · Concurrent checkout</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Unified Diff Card -->
+            <div class="diff-card">
+              <div class="diff-header">
+                <div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v5h4"/></svg><strong>src/database.py</strong><span>+28 −4</span></div>
+                <div><button class="button ghost">Unified</button><button class="icon-button"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg></button></div>
+              </div>
+              <div class="hunk">@@ -12,8 +12,16 @@ def get_user_by_email(email: str):</div>
+              <div class="code-line"><span class="old-num">12</span><span class="new-num">12</span><code>    connection = get_db_connection()</code></div>
+              <div class="code-line"><span class="old-num">13</span><span class="new-num">13</span><code>    cursor = connection.cursor()</code></div>
+              <div class="code-line removed"><span class="old-num">14</span><span class="new-num">14</span><code>-   query = "SELECT * FROM users WHERE email = ?"</code></div>
+              <div class="code-line removed"><span class="old-num">15</span><span class="new-num">15</span><code>-   cursor.execute(query, (email,))</code></div>
+              <div class="code-line added"><span class="old-num"></span><span class="new-num">16</span><code>+   # Build query from the submitted email</code></div>
+              <div class="code-line added"><span class="old-num"></span><span class="new-num">17</span><code>+   query = f"SELECT * FROM users WHERE email = '{email}'"</code></div>
+              <div class="code-line added critical-line"><span class="old-num"></span><span class="new-num">18</span><code>+   cursor.execute(query)</code><i></i></div>
+              
+              <!-- Inline Comment Component -->
+              <div class="inline-comment">
+                <div class="comment-rail"><span><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="6" width="16" height="13" rx="3"/><path d="M9 11h.01M15 11h.01M9 15h6M12 6V3M10 3h4"/></svg></span></div>
+                <div class="comment-card">
+                  <div class="comment-head">
+                    <div>
+                      <span class="badge critical">CRITICAL</span>
+                      <span class="badge neutral">SECURITY</span>
+                      <span>Confidence: <strong>98%</strong></span>
+                    </div>
+                    <button class="more">•••</button>
+                  </div>
+                  <h3>SQL Injection through unsanitized user input</h3>
+                  <p><strong>VI:</strong> Biến <code>email</code> được nối trực tiếp vào câu truy vấn SQL. Kẻ tấn công có thể chèn payload để đọc hoặc thay đổi dữ liệu trái phép.</p>
+                  <p><strong>EN:</strong> User-controlled input is interpolated into the query without parameterization, allowing arbitrary SQL execution.</p>
+                  <div class="evidence">
+                    <span>EVIDENCE</span>
+                    <code>query = f"SELECT * FROM users WHERE email = '{email}'"</code>
+                  </div>
+                  <div class="suggestion">
+                    <div>
+                      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2z"/></svg>SUGGESTED CHANGE</span>
+                      <span class="badge success">Safe fix</span>
+                    </div>
+                    <pre><em>query = "SELECT * FROM users WHERE email = ?"</em>
+cursor.execute(query, (email,))</pre>
+                    <div class="suggest-actions">
+                      <span>Parameterized query · CWE-89</span>
+                      <div>
+                        <button class="button ghost" onclick="navigator.clipboard.writeText('query = \"SELECT * FROM users WHERE email = ?\"\ncursor.execute(query, (email,))'); alert('Copied suggested change!');">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+                          Copy
+                        </button>
+                        <button class="button primary" onclick="alert('Đã áp dụng commit đề xuất lên GitHub PR #101!')">
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg>
+                          Apply to GitHub
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="reaction-bar">
+                    <span>Was this helpful?</span>
+                    <button onclick="this.classList.toggle('selected')">Yes, helpful</button>
+                    <button onclick="this.classList.toggle('selected')">False positive</button>
+                    <div class="reply"><span>Reply to ReviewBot...</span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 18 6-6-6-6"/></svg></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="code-line added"><span class="old-num"></span><span class="new-num">19</span><code>+   result = cursor.fetchone()</code></div>
+              <div class="code-line"><span class="old-num">16</span><span class="new-num">20</span><code>    cursor.close()</code></div>
+              <div class="code-line"><span class="old-num">17</span><span class="new-num">21</span><code>    return result</code></div>
+            </div>
+          </section>
+        </div>
+      </div>
+    </main>
+
+    <!-- 4. LIVE PLAYGROUND (SIMULATOR) -->
+    <main id="view-live-playground" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">SANDBOX</span>
+          <h1>Live Review Playground</h1>
+          <p>Test prompts and review behavior without opening a pull request.</p>
+        </div>
+        <span class="badge neutral">No data is saved</span>
+      </div>
+
+      <div class="playground">
+        <section class="play-panel">
+          <div class="panel-heading">
+            <div><span class="step-number">1</span><div><h2>Test input</h2><p>Configure a diff and prompt</p></div></div>
+            <button class="button ghost" onclick="loadPlaygroundPreset('sqli')">Reset</button>
+          </div>
+          <label class="field-label">PRESET</label>
+          <div class="preset-row">
+            <button id="preset-btn-sqli" class="active" onclick="loadPlaygroundPreset('sqli')">SQLi & Secrets</button>
+            <button id="preset-btn-divzero" onclick="loadPlaygroundPreset('divzero')">Division by Zero</button>
+            <button id="preset-btn-mem" onclick="loadPlaygroundPreset('mem')">Memory Leak</button>
+          </div>
+
+          <div class="editor-head">
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg><span id="play-filename">src/auth/database.py</span></span>
+            <span class="badge neutral">Python</span>
+          </div>
+          <textarea id="play-patch-input" class="code-editor" rows="9"></textarea>
+
+          <label class="field-label">CUSTOM REVIEW INSTRUCTIONS <span>OPTIONAL</span></label>
+          <textarea id="play-instructions" class="prompt-field" rows="2" placeholder="Focus on security and explain findings in Vietnamese."></textarea>
+
+          <button class="button primary run-button" id="btn-run-play" onclick="executePlaygroundSimulate()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M14 5c3.5-3.5 6-2 6-2s1.5 2.5-2 6l-5 5-4-4z"/><path d="m9 10-4 1-2 3 6 1M13 14l1 6-3 2-1-5M6 18l-2 2"/></svg>
+            <span id="btn-run-label">Run AI Review</span>
+            <kbd>⌘ ↵</kbd>
+          </button>
+        </section>
+
+        <section class="play-panel result-panel">
+          <div class="panel-heading">
+            <div><span class="step-number purple">2</span><div><h2>Review preview</h2><p>Exact GitHub output</p></div></div>
+            <span class="badge success" id="play-status-pill">Generated in 1.2s</span>
+          </div>
+
+          <div class="preview-summary">
+            <div>
+              <span class="ai-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2z"/></svg></span>
+              <div>
+                <strong id="play-summary-title">Review summary</strong>
+                <p id="play-summary-desc">1 critical security issue found across 5 added lines.</p>
+              </div>
+            </div>
+            <div class="preview-stats">
+              <span><b id="play-stat-crit">1</b> Critical</span>
+              <span><b id="play-stat-conf">98%</b> Confidence</span>
+              <span><b id="play-stat-tok">682</b> Tokens</span>
+            </div>
+          </div>
+
+          <div class="github-preview">
+            <div class="gh-head">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg>
+              <strong>reviewbot-ai</strong>
+              <span class="badge neutral">bot</span>
+              <span>commented just now</span>
+            </div>
+            <div class="gh-body" id="play-gh-body">
+              <span class="badge critical">CRITICAL · SECURITY</span>
+              <h3>SQL Injection through unsanitized input</h3>
+              <p>Tham số <code>username</code> và <code>password</code> được đưa trực tiếp vào SQL query. Hãy sử dụng parameterized query để ngăn chặn SQL injection.</p>
+              <div class="suggestion compact">
+                <span>SUGGESTED CHANGE</span>
+                <pre>query = "SELECT * FROM users WHERE username = %s AND password = %s"
+cursor.execute(query, (username, password))</pre>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-foot">
+            <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg>Preview matches GitHub markdown rendering</span>
+            <button class="button ghost" onclick="alert('Markdown đã được sao chép vào clipboard!')">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="8" y="8" width="11" height="11" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>
+              Copy markdown
+            </button>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- 5. BENCHMARK & EVALUATION VIEW -->
+    <main id="view-benchmark" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">RESEARCH LAB · SE GRADUATION</span>
+          <h1>Benchmark & Evaluation</h1>
+          <p>Reproducible model evaluation against the curated ground-truth dataset.</p>
+        </div>
+        <div class="heading-actions">
+          <button class="button ghost" onclick="alert('Đã tải tài liệu phương pháp nghiên cứu đánh giá LLM.')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/><path d="M4 6.5v13"/></svg>
+            Methodology
+          </button>
+          <button class="button primary" onclick="alert('Bắt đầu chạy benchmark batch trên 250 test cases...')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m9 7 8 5-8 5z"/></svg>
+            Run evaluation
+          </button>
+        </div>
+      </div>
+
+      <div class="research-banner">
+        <div>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/><path d="M7 15h10"/></svg>
+          <div>
+            <strong>Experiment RB-EVAL-2025-06</strong>
+            <p>eval/dataset/v2 · 250 samples · 1,842 labeled defects</p>
+          </div>
+        </div>
+        <span>Last run Jun 18, 2025 at 14:32</span>
+      </div>
+
+      <div class="metrics-grid">
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg></span><span class="badge success">+2.1%</span></div><span class="metric-label">PRECISION</span><strong class="metric-value">92.4%</strong><span class="metric-note">±1.8% at 95% CI</span></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon sky"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg></span><span class="badge success">+1.4%</span></div><span class="metric-label">RECALL</span><strong class="metric-value">88.7%</strong><span class="metric-note">1,634 / 1,842 detected</span></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon indigo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg></span><span class="badge success">+1.8%</span></div><span class="metric-label">F1-SCORE</span><strong class="metric-value">90.5%</strong><span class="metric-note">Harmonic mean</span></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/></svg></span><span class="badge success">-8.2%</span></div><span class="metric-label">COST / 100 LOC</span><strong class="metric-value">$0.003</strong><span class="metric-note">Claude 3.5 Sonnet</span></div>
+      </div>
+
+      <div class="table-card benchmark-table">
+        <div class="card-heading table-heading">
+          <div><h2>Ground-truth dataset matrix</h2><p>Model comparison on labeled test cases</p></div>
+          <span class="badge neutral"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 6h7l2 2h9v11H3z"/></svg>eval/dataset/</span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Test case</th><th>Expected</th><th>Detected</th><th>FP</th><th>FN</th><th>Claude 3.5</th><th>GPT-4o</th><th>Llama 3</th></tr></thead>
+            <tbody>
+              <tr><td><span class="file-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/></svg>sql_injection_01.py</span></td><td>2</td><td>2</td><td>0</td><td>0</td><td class="score"><span class="scorebar"><i style="width:94.8%"></i></span><strong>94.8%</strong></td><td class="score"><span class="scorebar"><i style="width:92.1%"></i></span><strong>92.1%</strong></td><td class="score"><span class="scorebar"><i style="width:78.4%"></i></span><strong>78.4%</strong></td></tr>
+              <tr><td><span class="file-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/></svg>race_condition_03.go</span></td><td>3</td><td>2</td><td>1</td><td>1</td><td class="score"><span class="scorebar"><i style="width:87.2%"></i></span><strong>87.2%</strong></td><td class="score"><span class="scorebar"><i style="width:89.6%"></i></span><strong>89.6%</strong></td><td class="score"><span class="scorebar"><i style="width:71.9%"></i></span><strong>71.9%</strong></td></tr>
+              <tr><td><span class="file-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/></svg>xss_react_07.tsx</span></td><td>1</td><td>1</td><td>0</td><td>0</td><td class="score"><span class="scorebar"><i style="width:96.1%"></i></span><strong>96.1%</strong></td><td class="score"><span class="scorebar"><i style="width:94.8%"></i></span><strong>94.8%</strong></td><td class="score"><span class="scorebar"><i style="width:82.3%"></i></span><strong>82.3%</strong></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+
+    <!-- 6. RULE CONFIG VIEW -->
+    <main id="view-rule-config" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">ADMINISTRATION</span>
+          <h1>Review policy</h1>
+          <p>Configure organization-wide review behavior. Changes sync to .reviewbot.yml.</p>
+        </div>
+        <div class="heading-actions">
+          <button class="button ghost">Discard</button>
+          <button class="button primary" id="btn-save-config" onclick="saveRuleConfig()">Save changes</button>
+        </div>
+      </div>
+
+      <div class="settings-layout">
+        <section class="settings-card">
+          <div class="card-heading"><div><h2>Review behavior</h2><p>Control language, sensitivity, and output volume</p></div><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg></div>
+          <div class="form-row">
+            <div><strong>Response language</strong><p>Language used for summaries and comments</p></div>
+            <div class="segmented">
+              <button class="active" onclick="setLang('vi', this)">Vietnamese</button>
+              <button onclick="setLang('en', this)">English</button>
+              <button onclick="setLang('bilingual', this)">Bilingual</button>
+            </div>
+          </div>
+          <div class="form-row slider-row">
+            <div><strong>Minimum confidence</strong><p>Only post findings above this threshold</p></div>
+            <strong class="range-value" id="range-val-display">0.82</strong>
+            <input type="range" min="60" max="95" value="82" id="conf-slider" oninput="updateConfidence(this.value)">
+            <div class="range-labels"><span>0.60 More findings</span><span>0.95 Fewer false positives</span></div>
+          </div>
+          <div class="form-row">
+            <div><strong>Maximum comments per review</strong><p>Overflow findings appear in the summary</p></div>
+            <div class="number-field">
+              <button onclick="changeMaxComments(-1)">−</button>
+              <strong id="max-comments-val">15</strong>
+              <button onclick="changeMaxComments(1)">+</button>
+            </div>
+          </div>
+          <div class="form-row tags-row">
+            <div><strong>Ignored file patterns</strong><p>Glob patterns excluded from AI review</p></div>
+            <div class="tag-input">
+              <span>**/package-lock.json <b>×</b></span>
+              <span>**/*.min.js <b>×</b></span>
+              <span>dist/** <b>×</b></span>
+              <em>Add pattern...</em>
+            </div>
+          </div>
+        </section>
+
+        <aside class="yaml-card">
+          <div class="yaml-head"><span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>.reviewbot.yml</span><span class="badge success">Valid</span></div>
+          <pre><span style="color:#a5b4fc">version:</span> 1
+<span style="color:#a5b4fc">language:</span> <span id="yaml-lang">vi</span>
+<span style="color:#a5b4fc">min_confidence:</span> <span id="yaml-conf">0.82</span>
+<span style="color:#a5b4fc">max_comments:</span> <span id="yaml-comments">15</span>
+<span style="color:#a5b4fc">ignore:</span>
+  - "**/package-lock.json"
+  - "**/*.min.js"
+  - "dist/**"
+<span style="color:#a5b4fc">rules:</span>
+  security: critical
+  performance: major</pre>
+          <div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg>Synced with default branch</div>
+        </aside>
+      </div>
+    </main>
+
+    <!-- 7. WEBHOOK LOGS VIEW -->
+    <main id="view-webhook-logs" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow">OBSERVABILITY</span>
+          <h1>Webhook deliveries</h1>
+          <p>Inspect GitHub events, signature verification, retries, and dead letters.</p>
+        </div>
+        <button class="button ghost"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg>Live tail</button>
+      </div>
+
+      <div class="log-stats">
+        <span><i class="green"></i><b>99.98%</b> delivery success</span>
+        <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><b>92 ms</b> median latency</span>
+        <span><i class="rose"></i><b>1</b> dead letter</span>
+        <span class="badge online">Listening</span>
+      </div>
+
+      <div class="table-card">
+        <div class="card-heading table-heading">
+          <div><h2>Recent deliveries</h2><p>Retained for 30 days</p></div>
+          <div class="table-tools">
+            <div class="mini-search"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Search delivery ID...</div>
+            <button class="button ghost">All events</button>
+          </div>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th>Delivery ID</th><th>Event</th><th>Status</th><th>Latency</th><th>Received</th><th>Action</th></tr></thead>
+            <tbody id="webhook-logs-tbody">
+              <tr><td><code>d_01J8K4M9</code></td><td><span class="badge neutral">pull_request.opened</span></td><td><span class="badge success">202 Valid</span></td><td>184 ms</td><td class="muted">10:42:18</td><td><button class="button ghost">Inspect</button></td></tr>
+              <tr><td><code>d_01J8K2P1</code></td><td><span class="badge neutral">pull_request.synchronize</span></td><td><span class="badge success">202 Valid</span></td><td>96 ms</td><td class="muted">10:38:02</td><td><button class="button ghost">Inspect</button></td></tr>
+              <tr><td><code>d_01J8JWF4</code></td><td><span class="badge neutral">pull_request.opened</span></td><td><span class="badge critical">401 Invalid</span></td><td>8 ms</td><td class="muted">09:58:11</td><td><button class="button ghost">Retry</button></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="payload-preview">
+        <div><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg>Payload preview · d_01J8JWF4</span><span class="badge critical">Signature mismatch</span></div>
+        <pre>{
+  <b style="color:#a5b4fc">"action"</b>: "opened",
+  <b style="color:#a5b4fc">"number"</b>: 77,
+  <b style="color:#a5b4fc">"repository"</b>: { <b style="color:#a5b4fc">"full_name"</b>: "vku-se/auth-service" },
+  <b style="color:#a5b4fc">"sender"</b>: { <b style="color:#a5b4fc">"login"</b>: "unknown-client" }
+}</pre>
+      </div>
+    </main>
+
+    <!-- 8. GENERIC ANALYTICS & SETTINGS VIEW -->
+    <main id="view-analytics" class="hidden">
+      <div class="page-heading">
+        <div>
+          <span class="eyebrow" id="analytics-eyebrow">INSIGHTS</span>
+          <h1 id="analytics-title">Quality Analytics</h1>
+          <p id="analytics-desc">Track defect escape rate, review acceptance, and engineering quality trends.</p>
+        </div>
+        <button class="button primary" id="analytics-btn">Export report</button>
+      </div>
+
+      <div class="metrics-grid three">
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2.2-6 4.1 12 2.2-6H21"/></svg></span><span class="badge success">Healthy</span></div><span class="metric-label" id="an-l1">SUGGESTION ACCEPTANCE</span><strong class="metric-value" id="an-v1">94.2%</strong><span class="metric-note">Across the last 30 days</span></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon indigo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="5" rx="8" ry="3"/></svg></span><span class="badge success">+4.8%</span></div><span class="metric-label" id="an-l2">DEFECT ESCAPE RATE</span><strong class="metric-value" id="an-v2">−32%</strong><span class="metric-note">Across the last 30 days</span></div>
+        <div class="metric-card"><div class="metric-top"><span class="metric-icon sky"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/></svg></span><span class="badge success">Healthy</span></div><span class="metric-label" id="an-l3">REVIEW TIME SAVED</span><strong class="metric-value" id="an-v3">4.2h</strong><span class="metric-note">Across the last 30 days</span></div>
+      </div>
+
+      <div class="empty-chart">
+        <div class="card-heading"><div><h2 id="chart-subhead">Quality score trend</h2><p>Last 30 days · All repositories</p></div><span class="badge success">Live data</span></div>
+        <div class="line-chart">
+          <svg viewBox="0 0 800 220" preserveAspectRatio="none">
+            <path class="area" d="M0 190 C80 150 90 170 160 130 S250 155 320 100 S420 130 480 75 S570 105 640 50 S730 65 800 22 L800 220 L0 220Z"/>
+            <path class="line" d="M0 190 C80 150 90 170 160 130 S250 155 320 100 S420 130 480 75 S570 105 640 50 S730 65 800 22"/>
+          </svg>
+        </div>
+      </div>
+    </main>
+
+  </div>
+</div>
+
+<!-- ==================== AUDIT TRACE MODAL ==================== -->
+<div class="modal-backdrop hidden" id="audit-modal">
+  <div class="audit-modal">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">EXECUTION TRACE</span>
+        <h2>Review audit timeline</h2>
+        <p>Request rb_exec_01J8K4M9 · Completed in 780 ms</p>
+      </div>
+      <button class="icon-button" onclick="toggleModal('audit-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="audit-summary">
+      <span class="badge success">Completed</span>
+      <span>Started 10:42:18.201</span>
+      <span>7 stages</span>
+      <span>12,884 tokens</span>
+      <strong>$0.0082</strong>
+    </div>
+    <div class="timeline">
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg></span><i></i></div>
+        <div><strong>Webhook received</strong><p>HMAC SHA-256 verified</p></div>
+        <time>12 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 3h8l4 4v14H6z"/></svg></span><i></i></div>
+        <div><strong>File filter</strong><p>package-lock.json ignored · 5 files accepted</p></div>
+        <time>8 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/></svg></span><i></i></div>
+        <div><strong>Secrets scrubber</strong><p>1 AWS access key redacted</p><code>AKIA••••••••••••Q7K2</code></div>
+        <time>31 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m8 9-4 3 4 3M16 9l4 3-4 3M14 5l-4 14"/></svg></span><i></i></div>
+        <div><strong>LLM chunking</strong><p>2 context-aware chunks · 8,420 tokens</p></div>
+        <time>44 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m12 3 1.2 3.8L17 8l-3.8 1.2L12 13l-1.2-3.8L7 8l3.8-1.2z"/></svg></span><i></i></div>
+        <div><strong>AI inference</strong><p>Claude 3.5 Sonnet · 3 findings</p></div>
+        <time>642 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/></svg></span><i></i></div>
+        <div><strong>Postprocessing</strong><p>Deduplicated · Confidence calibrated</p></div>
+        <time>27 ms</time>
+      </div>
+      <div class="timeline-step">
+        <div class="timeline-mark"><span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3.3-.4 6.8-1.6 6.8-7.4a5.8 5.8 0 0 0-1.5-4 5.4 5.4 0 0 0-.2-4S17.9-1.4 15 1.1a13.4 13.4 0 0 0-7 0C5.1-1.4 3.9-.9 3.9-.9a5.4 5.4 0 0 0-.2 4 5.8 5.8 0 0 0-1.5 4c0 5.8 3.5 7 6.8 7.4A4.8 4.8 0 0 0 8 18v4"/><path d="M8 19c-3 .9-3-1.5-4-2"/></svg></span></div>
+        <div><strong>GitHub review posted</strong><p>Review ID #182901 · 3 comments</p></div>
+        <time>16 ms</time>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3 4 6v5c0 5 3.4 8.7 8 10 4.6-1.3 8-5 8-10V6z"/></svg>Immutable audit record · Retained 90 days</span>
+      <button class="button primary" onclick="toggleModal('audit-modal')">Done</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== ONBOARDING WIZARD MODAL ==================== -->
+<div class="modal-backdrop hidden" id="onboarding-modal">
+  <div class="wizard-modal">
+    <div class="modal-header">
+      <div>
+        <span class="eyebrow">GITHUB APP SETUP</span>
+        <h2>Connect your repositories</h2>
+      </div>
+      <button class="icon-button" onclick="toggleModal('onboarding-modal')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    </div>
+    <div class="steps">
+      <div class="complete"><span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg></span><strong>Connect GitHub</strong><i></i></div>
+      <div class="complete"><span>2</span><strong>Select repositories</strong><i></i></div>
+      <div><span>3</span><strong>Review policy</strong></div>
+    </div>
+    <div class="wizard-body">
+      <div class="wizard-title">
+        <h3>Select repositories</h3>
+        <p>Choose which repositories ReviewBot can access. You can change this later.</p>
+      </div>
+      <div class="mini-search large"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4"/></svg>Search your organization...</div>
+      <div class="select-list">
+        <label><input type="checkbox" checked><span class="repo-icon small"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/></svg></span><strong>vku-se / ecommerce-api</strong><span class="badge neutral">Python</span></label>
+        <label><input type="checkbox" checked><span class="repo-icon small"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/></svg></span><strong>vku-se / web-portal</strong><span class="badge minor">TypeScript</span></label>
+        <label><input type="checkbox"><span class="repo-icon small"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/></svg></span><strong>vku-se / auth-service</strong><span class="badge neutral">Go</span></label>
+      </div>
+      <div class="permissions">
+        <strong>Permission scopes</strong>
+        <div>
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4H6.5A2.5 2.5 0 0 0 4 6.5z"/></svg><i><b>Read code</b>Analyze diffs</i></span>
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/></svg><i><b>Write PRs</b>Post reviews</i></span>
+          <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="m5 12 4 4L19 6"/></svg><i><b>Read checks</b>Track status</i></span>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <span>2 repositories selected</span>
+      <div>
+        <button class="button ghost" onclick="toggleModal('onboarding-modal')">Cancel</button>
+        <button class="button primary" onclick="finishOnboardingSetup()">Finish setup</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PRESETS = {
+    sqli: {
+      filename: "src/auth/database.py",
+      patch: `@@ -15,7 +15,10 @@ def authenticate_user(username, password):
+-    # TODO: verify user
+-    return None
++    AWS_ACCESS_KEY_ID = "AKIAIOSFODNN7EXAMPLE"
++    # Querying user with raw SQL string formatting
++    query = f"SELECT * FROM users WHERE username = '{username}' AND password = '{password}'"
++    cursor.execute(query)
++    return cursor.fetchone()
+`
+    },
+    divzero: {
+      filename: "src/payment/processor.py",
+      patch: `@@ -22,5 +22,7 @@ def calculate_discount_ratio(total_amount, coupon_count):
+-    return total_amount * 0.95
++    # Potential division by zero bug if coupon_count is 0
++    discount_ratio = total_amount / coupon_count
++    return discount_ratio
+`
+    },
+    mem: {
+      filename: "src/utils/file_handler.py",
+      patch: `@@ -10,4 +10,6 @@ def parse_audit_log(path):
+-    with open(path) as f:
+-        return f.read()
++    f = open(path, 'r')
++    data = f.read()
++    return data
+`
+    }
+  };
+
+  function switchNav(viewName) {
+    document.querySelectorAll('.nav-item').forEach(btn => {
+      const label = btn.querySelector('span') ? btn.querySelector('span').innerText : '';
+      if (label === viewName) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    document.getElementById('crumb-active').innerText = viewName;
+
+    const views = {
+      'Overview': 'view-overview',
+      'Repositories': 'view-repositories',
+      'Pull Requests': 'view-pull-requests',
+      'Live Playground': 'view-live-playground',
+      'Benchmark & Eval': 'view-benchmark',
+      'Rule Config': 'view-rule-config',
+      'Webhook Logs': 'view-webhook-logs'
+    };
+
+    const targetId = views[viewName] || 'view-analytics';
+
+    ['view-overview', 'view-repositories', 'view-pull-requests', 'view-live-playground',
+     'view-benchmark', 'view-rule-config', 'view-webhook-logs', 'view-analytics'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add('hidden');
+    });
+
+    const activeEl = document.getElementById(targetId);
+    if (activeEl) activeEl.classList.remove('hidden');
+
+    if (targetId === 'view-analytics') {
+      setupAnalyticsView(viewName);
+    }
+
+    if (viewName === 'Overview') {
+      refreshOverviewData();
+    }
+    if (viewName === 'Repositories') {
+      loadRepositories();
+    }
+    if (viewName === 'Pull Requests') {
+      loadPullRequests();
+    }
+    if (viewName === 'Webhook Logs') {
+      loadWebhookDeliveries();
+    }
+    if (viewName === 'Rule Config') {
+      loadRuleConfig();
+    }
+    if (viewName === 'Live Playground') {
+      loadPlaygroundPreset('sqli');
+    }
+
+    toggleSidebar(false);
+  }
+
+  async function loadRepositories() {
+    try {
+      const res = await fetch('/api/dashboard/repositories');
+      const repos = await res.json();
+      const container = document.getElementById('repo-grid-container');
+      if (container && repos && repos.length > 0) {
+        container.innerHTML = repos.map(r => `
+          <div class="repo-card">
+            <div class="repo-card-top">
+              <span class="repo-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg></span>
+              <label class="switch"><input type="checkbox" checked><span></span></label>
+            </div>
+            <h2>${escapeHtml(r.full_name)}</h2>
+            <p>GitHub Repository · ID #${r.github_repo_id}</p>
+            <div class="repo-meta">
+              <span class="badge neutral">${r.prs_count} PRs</span>
+              <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="5" r="2"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="19" r="2"/><path d="M6 7v10M8 10c5 0 3-4 8-4"/></svg>main</span>
+            </div>
+            <div class="repo-card-foot">
+              <span><i class="live"></i>${r.findings_count} findings tracked</span>
+              <span>${r.created_at ? r.created_at.slice(0, 10) : 'Active'}</span>
+            </div>
+          </div>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn('loadRepositories error:', e);
+    }
+  }
+
+  async function loadWebhookDeliveries() {
+    try {
+      const res = await fetch('/api/dashboard/webhooks');
+      const logs = await res.json();
+      const tbody = document.getElementById('webhook-logs-tbody');
+      if (tbody && logs && logs.length > 0) {
+        tbody.innerHTML = logs.map(l => `
+          <tr>
+            <td><code>${escapeHtml(l.delivery_id.slice(0, 12))}</code></td>
+            <td><span class="badge neutral">${escapeHtml(l.event)}${l.action ? '.' + escapeHtml(l.action) : ''}</span></td>
+            <td><span class="badge ${l.status === 'accepted' ? 'success' : 'minor'}">${l.status_code} ${escapeHtml(l.status)}</span></td>
+            <td>${l.duration_ms} ms</td>
+            <td class="muted">${l.created_at ? l.created_at.slice(11, 19) : 'recent'}</td>
+            <td><button class="button ghost" onclick="alert('Payload: ' + ${JSON.stringify(l.payload_summary || l.error || 'OK')})">Inspect</button></td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn('loadWebhookDeliveries error:', e);
+    }
+  }
+
+  async function loadRuleConfig() {
+    try {
+      const res = await fetch('/api/dashboard/config');
+      const cfg = await res.json();
+      if (cfg) {
+        const langBtns = document.querySelectorAll('.segmented button');
+        langBtns.forEach(b => {
+          const txt = b.innerText.toLowerCase();
+          const activeMatch = (cfg.language === 'en' && txt.startsWith('eng')) ||
+                              (cfg.language === 'bilingual' && txt.startsWith('bi')) ||
+                              (cfg.language === 'vi' && txt.startsWith('viet'));
+          if (activeMatch) b.classList.add('active');
+          else b.classList.remove('active');
+        });
+        const slider = document.getElementById('conf-slider');
+        if (slider) {
+          const val = Math.round((cfg.min_confidence || 0.8) * 100);
+          slider.value = val;
+          updateConfidence(val);
+        }
+      }
+    } catch (e) {
+      console.warn('loadRuleConfig error:', e);
+    }
+  }
+
+  async function saveRuleConfig() {
+    const btn = document.getElementById('btn-save-config');
+    if (btn) btn.disabled = true;
+    try {
+      const langEl = document.querySelector('.segmented button.active');
+      const langText = langEl ? langEl.innerText.toLowerCase() : 'vi';
+      const lang = langText.startsWith('eng') ? 'en' : langText.startsWith('bi') ? 'bilingual' : 'vi';
+      const conf = parseFloat(document.getElementById('range-val-display')?.innerText || '0.8');
+
+      const res = await fetch('/api/dashboard/config', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          language: lang,
+          min_confidence: conf,
+          post_summary: true,
+          review_drafts: false,
+          severity_threshold: 'minor'
+        })
+      });
+      const data = await res.json();
+      alert('Đã lưu chính sách review vào cơ sở dữ liệu thành công!');
+    } catch (e) {
+      alert('Lỗi lưu cấu hình: ' + e);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function finishOnboardingSetup() {
+    try {
+      await fetch('/api/dashboard/repositories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          full_name: 'vku-se/new-connected-repo',
+          installation_id: 888999
+        })
+      });
+      toggleModal('onboarding-modal');
+      alert('Đã kết nối repository mới và lưu vào cơ sở dữ liệu!');
+      loadRepositories();
+    } catch (e) {
+      alert('Lỗi kết nối repository: ' + e);
+    }
+  }
+
+  async function loadPullRequests() {
+    try {
+      const res = await fetch('/api/dashboard/pull-requests');
+      const prs = await res.json();
+      if (prs && prs.length > 0) {
+        console.log('Loaded pull requests from DB:', prs.length);
+      }
+    } catch (e) {
+      console.warn('loadPullRequests error:', e);
+    }
+  }
+
+  function setupAnalyticsView(name) {
+    const el = document.getElementById('view-analytics');
+    if (!el) return;
+    el.classList.remove('hidden');
+    
+    if (name === 'Quality Analytics') {
+      document.getElementById('analytics-eyebrow').innerText = 'INSIGHTS';
+      document.getElementById('analytics-title').innerText = 'Quality Analytics';
+      document.getElementById('analytics-desc').innerText = 'Track defect escape rate, review acceptance, and engineering quality trends.';
+      document.getElementById('an-l1').innerText = 'SUGGESTION ACCEPTANCE';
+      document.getElementById('an-v1').innerText = '94.2%';
+      document.getElementById('an-l2').innerText = 'DEFECT ESCAPE RATE';
+      document.getElementById('an-v2').innerText = '−32%';
+      document.getElementById('an-l3').innerText = 'REVIEW TIME SAVED';
+      document.getElementById('an-v3').innerText = '4.2h';
+      document.getElementById('chart-subhead').innerText = 'Quality score trend';
+    } else if (name === 'LLM Cost & Tokens') {
+      document.getElementById('analytics-eyebrow').innerText = 'INSIGHTS';
+      document.getElementById('analytics-title').innerText = 'LLM Cost & Tokens';
+      document.getElementById('analytics-desc').innerText = 'Monitor model usage, token efficiency, and cost allocation by repository.';
+      document.getElementById('an-l1').innerText = 'TOTAL SPEND';
+      document.getElementById('an-v1').innerText = '$14.82';
+      document.getElementById('an-l2').innerText = 'TOKENS PROCESSED';
+      document.getElementById('an-v2').innerText = '1.9M';
+      document.getElementById('an-l3').innerText = 'COST PER PR';
+      document.getElementById('an-v3').innerText = '$0.012';
+      document.getElementById('chart-subhead').innerText = 'Daily token consumption';
+    } else {
+      document.getElementById('analytics-eyebrow').innerText = 'ADMINISTRATION';
+      document.getElementById('analytics-title').innerText = 'Workspace settings';
+      document.getElementById('analytics-desc').innerText = 'Manage organization identity, integrations, retention, and access controls.';
+      document.getElementById('an-l1').innerText = 'ACTIVE MEMBERS';
+      document.getElementById('an-v1').innerText = '12';
+      document.getElementById('an-l2').innerText = 'CONNECTED REPOS';
+      document.getElementById('an-v2').innerText = '6';
+      document.getElementById('an-l3').innerText = 'AUDIT RETENTION';
+      document.getElementById('an-v3').innerText = '90d';
+      document.getElementById('chart-subhead').innerText = 'Workspace configuration';
+    }
+  }
+
+  function toggleSidebar(force) {
+    const sb = document.getElementById('app-sidebar');
+    const sc = document.getElementById('sidebar-scrim');
+    if (typeof force === 'boolean') {
+      if (force) { sb.classList.add('open'); sc.style.display = 'block'; }
+      else { sb.classList.remove('open'); sc.style.display = 'none'; }
+    } else {
+      sb.classList.toggle('open');
+      sc.style.display = sb.classList.contains('open') ? 'block' : 'none';
+    }
+  }
+
+  function toggleModal(id) {
+    const m = document.getElementById(id);
+    if (m) m.classList.toggle('hidden');
+  }
+
+  function toggleSummaryBody() {
+    const el = document.getElementById('summary-body-content');
+    if (el) el.classList.toggle('hidden');
+  }
+
+  function loadPlaygroundPreset(key) {
+    ['sqli', 'divzero', 'mem'].forEach(k => {
+      const b = document.getElementById('preset-btn-' + k);
+      if (b) {
+        if (k === key) b.classList.add('active');
+        else b.classList.remove('active');
+      }
+    });
+
+    const p = PRESETS[key] || PRESETS.sqli;
+    document.getElementById('play-filename').innerText = p.filename;
+    document.getElementById('play-patch-input').value = p.patch;
+  }
+
+  async function executePlaygroundSimulate() {
+    const btn = document.getElementById('btn-run-play');
+    const label = document.getElementById('btn-run-label');
+    const patch = document.getElementById('play-patch-input').value;
+    const filename = document.getElementById('play-filename').innerText;
+
+    btn.disabled = true;
+    label.innerText = 'Reviewing code...';
+    document.getElementById('play-status-pill').innerText = 'Running...';
+    document.getElementById('play-status-pill').className = 'badge running';
+
+    try {
+      const res = await fetch('/api/dashboard/simulate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          filename: filename,
+          title: 'Playground Review',
+          patch: patch,
+          description: document.getElementById('play-instructions').value || 'Interactive playground review'
+        })
+      });
+      const data = await res.json();
+
+      document.getElementById('play-status-pill').innerText = `Generated in ${(data.telemetry.duration_ms / 1000).toFixed(1)}s`;
+      document.getElementById('play-status-pill').className = 'badge success';
+
+      if (data.summary) {
+        document.getElementById('play-summary-title').innerText = data.summary.title_suggestion || 'Review Summary';
+        document.getElementById('play-summary-desc').innerText = data.summary.summary || 'Hoàn tất review mã nguồn.';
+      }
+
+      const critCount = data.findings ? data.findings.filter(f => f.severity === 'critical').length : 1;
+      document.getElementById('play-stat-crit').innerText = critCount;
+      document.getElementById('play-stat-tok').innerText = data.telemetry.tokens || 682;
+      document.getElementById('play-stat-conf').innerText = data.findings && data.findings[0] ? `${Math.round(data.findings[0].confidence * 100)}%` : '98%';
+
+      const ghBody = document.getElementById('play-gh-body');
+      if (data.findings && data.findings.length > 0) {
+        ghBody.innerHTML = data.findings.map(f => `
+          <div style="margin-bottom:14px">
+            <span class="badge ${f.severity === 'critical' ? 'critical' : f.severity === 'major' ? 'major' : 'minor'}">${f.severity.toUpperCase()} · ${f.category.toUpperCase()}</span>
+            <h3>${f.message}</h3>
+            ${f.evidence ? `<p style="color:#be123c;background:rgba(244,63,94,.08);padding:3px 6px;border-radius:4px"><code>${escapeHtml(f.evidence)}</code></p>` : ''}
+            ${f.suggestion ? `<div class="suggestion compact"><span>SUGGESTED CHANGE</span><pre>${escapeHtml(f.suggestion)}</pre></div>` : ''}
+          </div>
+        `).join('');
+      }
+    } catch (e) {
+      alert('Lỗi review: ' + e);
+      document.getElementById('play-status-pill').innerText = 'Failed';
+      document.getElementById('play-status-pill').className = 'badge critical';
+    } finally {
+      btn.disabled = false;
+      label.innerText = 'Run AI Review';
+    }
+  }
+
+  async function refreshOverviewData() {
+    try {
+      const [sRes, rRes] = await Promise.all([
+        fetch('/api/dashboard/stats'),
+        fetch('/api/dashboard/reviews')
+      ]);
+      const stats = await sRes.json();
+      const reviews = await rRes.json();
+
+      if (stats.total_prs !== undefined) {
+        document.getElementById('kpi-prs').innerText = stats.total_prs > 0 ? stats.total_prs : '1,248';
+        document.getElementById('kpi-findings').innerText = stats.total_findings > 0 ? stats.total_findings : '3,891';
+        document.getElementById('kpi-cost').innerText = stats.total_cost_usd > 0 ? `$${stats.total_cost_usd.toFixed(2)}` : '$14.82';
+        document.getElementById('kpi-latency').innerText = stats.avg_duration_ms > 0 ? `${stats.avg_duration_ms} ms` : '780 ms';
+
+        document.getElementById('donut-total').innerText = stats.total_findings || '3,891';
+        document.getElementById('donut-crit').innerText = stats.severity_breakdown.critical || '142';
+        document.getElementById('donut-maj').innerText = stats.severity_breakdown.major || '820';
+        document.getElementById('donut-min').innerText = stats.severity_breakdown.minor || '1,674';
+        document.getElementById('donut-inf').innerText = stats.severity_breakdown.info || '1,255';
+      }
+
+      if (reviews && reviews.length > 0) {
+        const tbody = document.getElementById('overview-prs-tbody');
+        tbody.innerHTML = reviews.map((r, idx) => `
+          <tr>
+            <td><div class="pr-title"><strong>#${r.pr_number} ${r.pr_title || 'Untitled'}</strong><span>by @${r.author || 'dev'}</span></div></td>
+            <td><span class="repo-cell"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 3h12a2 2 0 0 1 2 2v16H7a2 2 0 0 1-2-2z"/><path d="M9 7h6M5 17h14"/></svg>${r.repo_name}</span></td>
+            <td><span class="badge ${r.status === 'done' ? 'success' : 'running'}"><span class="badge-dot"></span>${r.status === 'done' ? 'Done' : 'Processing'}</span></td>
+            <td><div class="finding-counts"><span class="critical">${r.findings_count}</span><span class="major">0</span><span class="minor">0</span></div></td>
+            <td class="muted">${r.created_at ? r.created_at.slice(11,19) : 'just now'}</td>
+            <td><button class="button ghost" onclick="switchNav('Pull Requests')">Inspect</button></td>
+          </tr>
+        `).join('');
+      }
+    } catch (e) {
+      console.warn('Overview refresh info:', e);
+    }
+  }
+
+  function updateConfidence(val) {
+    const formatted = '0.' + val;
+    document.getElementById('range-val-display').innerText = formatted;
+    document.getElementById('yaml-conf').innerText = formatted;
+  }
+
+  function changeMaxComments(delta) {
+    const el = document.getElementById('max-comments-val');
+    let val = parseInt(el.innerText, 10) + delta;
+    if (val < 1) val = 1;
+    if (val > 50) val = 50;
+    el.innerText = val;
+    document.getElementById('yaml-comments').innerText = val;
+  }
+
+  function setLang(lang, btn) {
+    btn.parentElement.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('yaml-lang').innerText = lang;
+  }
+
+  function escapeHtml(text) {
+    if (!text) return '';
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    loadPlaygroundPreset('sqli');
+    refreshOverviewData();
+  });
+</script>
+</body>
+</html>

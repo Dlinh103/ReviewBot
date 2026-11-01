@@ -1,0 +1,8 @@
+@@ -0,0 +1,7 @@
++def greet(name: str) -> str:
++    """Greet the user by name."""
++    if not name:
++        return "Hello, stranger!"
++    return f"Hello, {name}!"
++
++print(greet("World"))
